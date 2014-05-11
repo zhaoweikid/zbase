@@ -75,7 +75,7 @@ def test():
     m.append_file('sendmail.py', 'text/plain')
     print m.tostring()
 
-    sender = MailSender('smtp.exmail.qq.com', 'receipt@qfpay.net', 'qianfang911')
+    sender = MailSender('smtp.exmail.qq.com', 'receipt@qfpay.net', '')
     sender.send(m)
 
 
