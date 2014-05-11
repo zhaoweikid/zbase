@@ -2,7 +2,9 @@
 import string, sys, os, time
 import threading
 import Queue, traceback
-import log
+import logging
+
+log = logging.getLogger()
 
 TASK_NORET = 0
 TASK_RET   = 1

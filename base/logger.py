@@ -5,7 +5,7 @@ import logging
 import logging.config
 from logging import INFO,DEBUG,INFO,WARN,ERROR,FATAL,NOTSET
 
-LEVEL_COLOR = {DEBUG:'\33[39m', 
+LEVEL_COLOR = {DEBUG:'\33[37m', 
                INFO:'\33[39m', 
                WARN:'\33[33m',
                ERROR:'\33[35m', 
@@ -285,5 +285,5 @@ def test6():
 
 
 if __name__ == '__main__':
-    test6()
+    test5()
 

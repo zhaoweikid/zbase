@@ -2,7 +2,9 @@
 import os, sys
 import signal, time
 import traceback
-from zbase import log
+import logging
+
+log = logging.getLogger()
 
 class Watcher:
     def __init__(self):

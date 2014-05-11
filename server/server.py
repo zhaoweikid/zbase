@@ -3,7 +3,10 @@ import os, sys
 import socket, traceback
 import errno, threading
 import SocketServer
-from zbase import log, sockfile
+from zbase import sockfile
+import logging
+
+log = logging.getLogger()
 
 class TcpServer:
     def __init__(self, addr, handler, threads=1, procs=1):

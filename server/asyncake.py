@@ -7,9 +7,10 @@ import traceback
 import os
 from errno import EALREADY, EINPROGRESS, EWOULDBLOCK, ECONNRESET, \
      ENOTCONN, ESHUTDOWN, EINTR, EISCONN, errorcode
-
-from zbase import log
+import logging
 from zbase.server import chain
+
+log = logging.getLogger()
 
 SELECT = 1
 POLL   = 2

@@ -3,10 +3,11 @@ import os, sys
 import pprint, time
 import datetime
 import types, string, re
-import traceback
+import traceback, logging
 from zbase.base.logger import log
 from zbase.db import dbpool, pager
 from zbase.db.fields import *
+
 
 class TableMeta (type):
     def __new__(cls, name, bases, dct):

@@ -318,10 +318,12 @@ def with_mysql_reconnect(func):
             try:
                 x = func(self, *args, **argitems)
             except MySQLdb.OperationalError, e:
-                #log.err('mysql error:', e)
                 if e[0] >= 2000: # client error
-                    #log.err('reconnect ...')
-                    self.conn.close()
+                    try:
+                        self.conn.close()
+                    except:
+                        log.warn(traceback.format_exc())
+                        self.conn = None
                     self.connect()
 
                     trycount -= 1
@@ -412,7 +414,7 @@ class MySQLConnection (DBConnection):
 
     def last_insert_id(self):
         ret = self.query('select last_insert_id()', isdict=False)
-        log.debug('conn:%s last insert id:%s', self.conn, str(ret))
+        #log.debug('conn:%s last insert id:%s', self.conn, str(ret))
         return ret[0][0]
 
     def start(self):
@@ -460,16 +462,16 @@ class SQLiteConnection (DBConnection):
 class DBConnProxy:
     def __init__(self, masterconn, slaveconn):
         #self.name   = ''
-        self.master = masterconn
-        self.slave  = slaveconn
+        self._master = masterconn
+        self._slave  = slaveconn
 
         self._modify_methods = set(['execute', 'executemany', 'last_insert_id', 'insert', 'update', 'delete'])
 
     def __getattr__(self, name):
         if name in self._modify_methods:
-            return getattr(self.master, name)
+            return getattr(self._master, name)
         else:
-            return getattr(self.slave, name)
+            return getattr(self._slave, name)
 
 
        
@@ -572,7 +574,6 @@ class DBPool (DBPoolBase):
     def size(self):
         return len(self.dbconn_idle), len(self.dbconn_using)
    
-
 
 
 class RWDBPool:
