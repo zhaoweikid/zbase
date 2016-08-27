@@ -1,2 +1,5 @@
 # coding: utf-8
-import db, server
+# for compatibility
+import sys
+sys.modules['qfcommon'] = sys.modules['zbase']
+

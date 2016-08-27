@@ -1,0 +1,598 @@
+[2014-10-22 11:04:52 +0000] [8820] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:04:52 +0000] [8820] [INFO] Listening at: http://0.0.0.0:6200 (8820)
+[2014-10-22 11:04:52 +0000] [8820] [INFO] Using worker: gevent
+[2014-10-22 11:04:52 +0000] [8825] [INFO] Booting worker with pid: 8825
+[2014-10-22 11:04:52 +0000] [8825] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 13, in <module>
+    loader.loadconf(HOME, sys.argv[1])
+  File "/home/zhaowei/work/qfcommon/base/loader.py", line 32, in loadconf
+    sys.modules['config'] = __import__(config_file)
+ImportError: No module named config_-c
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 13, in <module>
+    loader.loadconf(HOME, sys.argv[1])
+  File "/home/zhaowei/work/qfcommon/base/loader.py", line 32, in loadconf
+    sys.modules['config'] = __import__(config_file)
+ImportError: No module named config_-c
+[2014-10-22 11:04:52 +0000] [8825] [INFO] Worker exiting (pid: 8825)
+[2014-10-22 11:04:59 +0000] [8834] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:04:59 +0000] [8834] [INFO] Listening at: http://0.0.0.0:6200 (8834)
+[2014-10-22 11:04:59 +0000] [8834] [INFO] Using worker: gevent
+[2014-10-22 11:04:59 +0000] [8839] [INFO] Booting worker with pid: 8839
+[2014-10-22 11:04:59 +0000] [8839] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:04:59 +0000] [8839] [INFO] Worker exiting (pid: 8839)
+[2014-10-22 11:05:19 +0000] [8900] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:05:19 +0000] [8900] [INFO] Listening at: http://0.0.0.0:6200 (8900)
+[2014-10-22 11:05:19 +0000] [8900] [INFO] Using worker: gevent
+[2014-10-22 11:05:19 +0000] [8906] [INFO] Booting worker with pid: 8906
+[2014-10-22 11:05:19 +0000] [8906] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:05:19 +0000] [8906] [INFO] Worker exiting (pid: 8906)
+[2014-10-22 11:06:33 +0000] [8953] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:06:33 +0000] [8953] [INFO] Listening at: http://0.0.0.0:6200 (8953)
+[2014-10-22 11:06:33 +0000] [8953] [INFO] Using worker: gevent
+[2014-10-22 11:06:33 +0000] [8958] [INFO] Booting worker with pid: 8958
+[2014-10-22 11:06:33 +0000] [8959] [INFO] Booting worker with pid: 8959
+[2014-10-22 11:06:33 +0000] [8958] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:06:33 +0000] [8958] [INFO] Worker exiting (pid: 8958)
+[2014-10-22 11:06:33 +0000] [8959] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:06:33 +0000] [8959] [INFO] Worker exiting (pid: 8959)
+[2014-10-22 11:06:33 +0000] [8960] [INFO] Booting worker with pid: 8960
+[2014-10-22 11:06:33 +0000] [8960] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:06:33 +0000] [8960] [INFO] Worker exiting (pid: 8960)
+[2014-10-22 11:07:29 +0000] [9049] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:07:29 +0000] [9049] [INFO] Listening at: http://0.0.0.0:6200 (9049)
+[2014-10-22 11:07:29 +0000] [9049] [INFO] Using worker: gevent
+[2014-10-22 11:07:29 +0000] [9054] [INFO] Booting worker with pid: 9054
+[2014-10-22 11:07:29 +0000] [9055] [INFO] Booting worker with pid: 9055
+[2014-10-22 11:07:29 +0000] [9054] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:07:29 +0000] [9054] [INFO] Worker exiting (pid: 9054)
+[2014-10-22 11:07:29 +0000] [9055] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:07:29 +0000] [9055] [INFO] Worker exiting (pid: 9055)
+[2014-10-22 11:07:29 +0000] [9056] [INFO] Booting worker with pid: 9056
+[2014-10-22 11:07:29 +0000] [9056] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:07:29 +0000] [9056] [INFO] Worker exiting (pid: 9056)
+[2014-10-22 11:07:56 +0000] [9254] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:07:56 +0000] [9254] [INFO] Listening at: http://0.0.0.0:6200 (9254)
+[2014-10-22 11:07:56 +0000] [9254] [INFO] Using worker: gevent
+[2014-10-22 11:07:56 +0000] [9262] [INFO] Booting worker with pid: 9262
+[2014-10-22 11:07:57 +0000] [9262] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:07:57 +0000] [9262] [INFO] Worker exiting (pid: 9262)
+[2014-10-22 11:08:59 +0000] [10293] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:08:59 +0000] [10293] [INFO] Listening at: http://0.0.0.0:6200 (10293)
+[2014-10-22 11:08:59 +0000] [10293] [INFO] Using worker: gevent
+[2014-10-22 11:08:59 +0000] [10320] [INFO] Booting worker with pid: 10320
+[2014-10-22 11:08:59 +0000] [10320] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:08:59 +0000] [10320] [INFO] Worker exiting (pid: 10320)
+[2014-10-22 11:11:50 +0000] [11707] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:11:50 +0000] [11707] [INFO] Listening at: http://0.0.0.0:6200 (11707)
+[2014-10-22 11:11:50 +0000] [11707] [INFO] Using worker: gevent
+[2014-10-22 11:11:50 +0000] [11715] [INFO] Booting worker with pid: 11715
+[2014-10-22 11:11:50 +0000] [11715] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:11:50 +0000] [11715] [INFO] Worker exiting (pid: 11715)
+[2014-10-22 11:11:50 +0000] [11716] [INFO] Booting worker with pid: 11716
+[2014-10-22 11:11:50 +0000] [11716] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:11:50 +0000] [11716] [INFO] Worker exiting (pid: 11716)
+[2014-10-22 11:12:27 +0000] [11815] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:12:27 +0000] [11815] [INFO] Listening at: http://0.0.0.0:6200 (11815)
+[2014-10-22 11:12:27 +0000] [11815] [INFO] Using worker: gevent
+[2014-10-22 11:12:27 +0000] [11820] [INFO] Booting worker with pid: 11820
+[2014-10-22 11:12:27 +0000] [11820] [ERROR] Exception in worker process:
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+Traceback (most recent call last):
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/arbiter.py", line 507, in spawn_worker
+    worker.init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/ggevent.py", line 193, in init_process
+    super(GeventWorker, self).init_process()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/workers/base.py", line 114, in init_process
+    self.wsgi = self.app.wsgi()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/home/qfpay/python/lib/python2.7/site-packages/gunicorn/util.py", line 356, in import_app
+    __import__(module)
+  File "/home/zhaowei/work/qfcommon/web/project/bin/server.py", line 9, in <module>
+    from qfcommon.base import logger,loader
+ImportError: No module named qfcommon.base
+[2014-10-22 11:12:27 +0000] [11820] [INFO] Worker exiting (pid: 11820)
+[2014-10-22 11:13:04 +0000] [11926] [INFO] Starting gunicorn 19.1.1
+[2014-10-22 11:13:04 +0000] [11926] [INFO] Listening at: http://0.0.0.0:6200 (11926)
+[2014-10-22 11:13:04 +0000] [11926] [INFO] Using worker: gevent
+[2014-10-22 11:13:04 +0000] [11931] [INFO] Booting worker with pid: 11931
+[2014-10-22 11:13:04 +0000] [11932] [INFO] Booting worker with pid: 11932
+[2014-10-22 11:13:04 +0000] [11933] [INFO] Booting worker with pid: 11933
+[2014-10-22 11:13:04 +0000] [11934] [INFO] Booting worker with pid: 11934
+[2014-10-22 11:13:04 +0000] [11935] [INFO] Booting worker with pid: 11935
+[2014-10-22 11:13:04 +0000] [11936] [INFO] Booting worker with pid: 11936
+[2014-10-22 11:13:04 +0000] [11937] [INFO] Booting worker with pid: 11937
+[2014-10-22 11:13:04 +0000] [11938] [INFO] Booting worker with pid: 11938
+[2014-10-22 11:13:04 +0000] [11948] [INFO] Booting worker with pid: 11948
+[2014-10-22 11:13:04 +0000] [11954] [INFO] Booting worker with pid: 11954
+[2014-10-22 11:13:05 +0000] [11960] [INFO] Booting worker with pid: 11960
+[2014-10-22 11:13:05 +0000] [11969] [INFO] Booting worker with pid: 11969
+[2014-10-22 11:13:05 +0000] [11973] [INFO] Booting worker with pid: 11973
+[2014-10-22 11:13:05 +0000] [11977] [INFO] Booting worker with pid: 11977
+[2014-10-22 11:13:05 +0000] [11978] [INFO] Booting worker with pid: 11978
+[2014-10-22 11:13:05 +0000] [11982] [INFO] Booting worker with pid: 11982
+[2014-10-22 11:13:12 +0000] [11926] [INFO] Handling signal: int
+[2014-10-22 11:13:12 +0000] [11926] [INFO] Shutting down: Master
