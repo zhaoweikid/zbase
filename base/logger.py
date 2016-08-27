@@ -1,26 +1,29 @@
 # coding: utf-8
-import os, sys
+
+import sys
 import types
 import logging
 import logging.config
-from logging import INFO,DEBUG,INFO,WARN,ERROR,FATAL,NOTSET
+from logging import DEBUG, INFO, WARN, ERROR, FATAL, NOTSET
 
-LEVEL_COLOR = {DEBUG:'\33[37m', 
-               INFO:'\33[39m', 
-               WARN:'\33[33m',
-               ERROR:'\33[35m', 
-               FATAL:'\33[31m', 
-               NOTSET:''}
+LEVEL_COLOR = {
+    DEBUG: '\33[2;39m',
+    INFO: '\33[0;36m',
+    WARN: '\33[0;33m',
+    ERROR: '\33[0;35m',
+    FATAL: '\33[1;31m',
+    NOTSET: ''
+}
 
 log = None
 
-class ScreenHandler (logging.StreamHandler):
+class ScreenHandler(logging.StreamHandler):
     def emit(self, record):
         try: 
             msg = self.format(record)
             stream = self.stream
             fs = LEVEL_COLOR[record.levelno] + "%s\n" + '\33[0m'
-            if not logging._unicode: #if no unicode support...
+            if not logging._unicode:
                 stream.write(fs % msg) 
             else:
                 try: 
@@ -50,7 +53,6 @@ def debug(msg, *args, **kwargs):
 def info(msg, *args, **kwargs):
     global log
     log.info(msg, *args, **kwargs)
-note = info
 
 def warn(msg, *args, **kwargs):
     global log
@@ -64,226 +66,126 @@ def error(msg, *args, **kwargs):
 def fatal(msg, *args, **kwargs):
     global log
     log.fatal(msg, *args, **kwargs)
-
 critical = fatal
 
-def install(filename='stdout', maxBytes=1024000000, backupCount=10):
-    global log
-    tfilename_str = type(filename) in (types.StringType,types.UnicodeType)
+def install(logdict, **options):
     pyv = sys.version_info
     if pyv[0] == 2 and pyv[1] < 7:
-        if not tfilename_str:
-            print 'python error, must python >= 2.7'
-            return
-        if tfilename_str and filename == 'stdout':
-            filename = None
-        logging.basicConfig(level=logging.DEBUG,
-                            format='%(asctime)s %(process)d,%(threadName)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s',
-                            #datefmt='%Y%m%d %H:%M:%S',
-                            filename=filename,
-                            filemode='w')
-        log = logging.getLogger()
-        log.note = log.info
-        return
+        raise RuntimeError('python error, must python >= 2.7')
 
-    conf = {
-        'version': 1,
-        'formatters': {
-            'myformat': {
-                'format': '%(asctime)s %(process)d,%(threadName)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s',
-            },
-        },
-        'handlers': {
-            'console': {
-                'class': 'logging.ScreenHandler',
-                'formatter': 'myformat',
-                'level': 'DEBUG',
-                'stream': 'ext://sys.stdout',
-            },
-        },
-        'loggers': {
-            #'zbase': {
-            #    'level': 'DEBUG',
-            #    'handlers': ['console'],
-            #},
-        },
-        'root': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        },
-
-    } 
-
-    
-    if tfilename_str and filename != 'stdout':
-        filecf = {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'myformat',
-            'level': 'DEBUG',
-            'filename': filename,
-            'maxBytes': maxBytes,
-            'backupCount': backupCount,
-        }
-
-        conf['handlers']['file'] = filecf
-        #conf['loggers']['zbase']['handlers'] = ['file']
-        conf['root']['handlers'] = ['file']
-
-    elif not tfilename_str: # filename: {'DEBUG':"test.log", "WARN":"test.log"}
-        filehandlers = []
-        for level,name in filename.iteritems():
-            filecf = {
-                'class': 'logging.handlers.RotatingFileHandler',
-                'formatter': 'myformat',
-                'level': level,
-                'filename': name,
-                'maxBytes': maxBytes,
-                'backupCount': backupCount,
+    if not isinstance(logdict, dict):
+        logdict = {
+            'root':{
+                'filename':logdict,
             }
-            conf['handlers']['file-'+name] = filecf
-            filehandlers.append('file-'+name)
-        conf['root']['handlers'] = filehandlers
+        }
+        if options:
+            logdict['root'].update(options)
 
-    logging.config.dictConfig(conf)
-    log = logging.getLogger()
-    return log
-
-def install_dict(conf):
-    logging.config.dictConfig(conf)
-    global log
-    key = conf['loggers'].keys()[0]
-    log = logging.getLogger(key)
-    return log
-
-
-install()
-
-def test():
-    def loginit():
-        logger  = logging.getLogger()
-        #handler = logging.StreamHandler()
-        handler = ScreenHandler()
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
-        logger.setLevel(logging.NOTSET)
-        return logger
-
-    log = loginit()
-
-    for i in range(0, 10):
-        log.info('info ...')
-        log.debug('debug ...')
-        log.warn('warn ...')
-        log.error('error ...')
-        log.fatal('fatal ...')
-
-def test2():
-    conf = {
+    conf = { 
         'version': 1,
         'formatters': {
             'myformat': {
                 'format': '%(asctime)s %(process)d,%(threadName)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s',
-            },
-        },
-        'handlers': {
-            'myhandler': {
-                'class': 'logging.ScreenHandler',
-                'formatter': 'myformat',
-                'level': 'DEBUG',
-                'stream': 'ext://sys.stdout',
-            },
-
-        },
-        'loggers': {
-            'test': {
-                'level': 'DEBUG',
-                'handlers': ['myhandler'],
-            },
-        },
-    } 
-    logging.config.dictConfig(conf)
-    log = logging.getLogger('test')
-
-    for i in range(0, 10):
-        log.debug('debug ...')
-        log.info('info ...')
-        log.warn('warn ...')
-        log.error('error ...')
-        log.fatal('fatal ...')
-
-def test3():
-    conf = {
-        'version': 1,
-        'disable_existing_loggers': True,
-        'formatters': {
-            'myformat': {
-                'format': '%(asctime)s %(process)d,%(threadName)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s',
-            },
-        },
+            },  
+        },  
         'handlers': {
             'console': {
                 'class': 'logging.ScreenHandler',
                 'formatter': 'myformat',
                 'level': 'DEBUG',
                 'stream': 'ext://sys.stdout',
-            },
-            'file': {
-                'class': 'logging.handlers.RotatingFileHandler',
-                'formatter': 'myformat',
-                'level': 'DEBUG',
-                'filename': 'test.log',
-            },
-
-        },
+            },  
+        },  
         'loggers': {
-            'test': {
-                'level': 'DEBUG',
+        },  
+    }
+
+    def get_log_conf(name, level='DEBUG'):
+        filecf = {
+            'class': 'logging.handlers.WatchedFileHandler',
+            'formatter': 'myformat',
+            'level': level.upper(),
+            'filename': name,
+        }
+        if options:
+            if options.has_key('when'):
+                filecf.update({'class': 'logging.handlers.TimedRotatingFileHandler'})
+            filecf.update(options)
+        return filecf
+  
+    for logname,logcf in logdict.iteritems():
+        loggercf = None
+        if logname == 'root':   
+            conf['root'] = {
+                'level':'DEBUG',
                 'handlers': ['console'],
-            },
-        },
-    } 
+            }
+            loggercf = conf['root']
+        else:
+            loggercf = {}
+            conf['loggers'][logname] = loggercf
+        filename = logcf['filename']
+        del logcf['filename']
+        tfilename_str = type(filename) in (types.StringType,types.UnicodeType)
+        if tfilename_str and filename != 'stdout':
+            conf['handlers']['file'+filename] = get_log_conf(filename)
+            loggercf['handlers'] = ['file'+filename]
+        elif not tfilename_str:
+            filehandlers = []
+            for level,name in filename.iteritems():
+                conf['handlers']['file-'+name] = get_log_conf(name, level)
+                filehandlers.append('file-'+name)
+            loggercf['handlers'] = filehandlers
+    for logname in logdict:
+        if logname != 'root':
+            logobj = logging.getLogger(logname)
+            logobj.propagate = False
+
     logging.config.dictConfig(conf)
-    log = logging.getLogger('test')
-
-    for i in range(0, 10):
-        log.debug('debug ...')
-        log.info('info ...')
-        log.warn('warn ...')
-        log.error('error ...')
-        log.fatal('fatal ...')
-
-def test4():
-    for i in range(0, 10):
-        log.debug('debug ...')
-        log.info('info ...')
-        log.warn('warn ...')
-        log.error('error ...')
-        log.fatal('fatal ...')
-
-def test5():
-    #log = logging.getLogger('zbase')
-
-    for i in range(0, 10):
-        logging.debug('debug ... %d', i)
-        logging.info('info ... %d', i)
-        logging.warn('warn ... %d', i)
-        logging.error('error ... %d', i)
-        logging.fatal('fatal ... %d', i)
-
+    logobj = logging.getLogger() 
+    global log
+    log = logobj
+    return logobj
 
 def test6():
-    install({"DEBUG":"test.log", "WARN":"test-warn.log", "ERROR":"test-err.log"})
+    install({
+        'root': {
+            'filename': {'DEBUG':"test-info.log", 'ERROR':'test-err.log'},
+        },
+        'mytest': {
+            'filename':'stdout',
+        },
+    })
 
+    log1 = logging.getLogger()
     for i in range(0, 10):
-        logging.debug('debug ... %d', i)
-        logging.info('info ... %d', i)
-        logging.warn('warn ... %d', i)
-        logging.error('error ... %d', i)
-        logging.fatal('fatal ... %d', i)
+        log1.debug('debug ... %d', i)
+        log1.info('info ... %d', i)
+        log1.warn('warn ... %d', i)
+        log1.error('error ... %d', i)
+        log1.fatal('fatal ... %d', i)
+
+    log2 = logging.getLogger('mytest')
+    for i in range(0, 10):
+        log2.debug('debug ... %d', i)
+        log2.info('info ... %d', i)
+        log2.warn('warn ... %d', i)
+        log2.error('error ... %d', i)
+        log2.fatal('fatal ... %d', i)
+
+
+def test1():
+    install('stdout')
+    log = logging.getLogger()
+    for i in range(0, 10):
+        log.debug('debug ... %d', i)
+        log.info('info ... %d', i)
+        log.warn('warn ... %d', i)
+        log.error('error ... %d', i)
+        log.fatal('fatal ... %d', i)
 
 
 if __name__ == '__main__':
-    test5()
-
+    #test1()
+    test6()
