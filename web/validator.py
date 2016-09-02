@@ -9,7 +9,6 @@ log = logging.getLogger()
 T_INT       = 1
 T_STR       = 2
 T_FLOAT     = 4
-T_DOUBLE    = T_FLOAT
 T_REG       = 8
 T_MAIL      = 16
 T_IP        = 32
