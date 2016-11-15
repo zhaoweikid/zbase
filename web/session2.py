@@ -33,15 +33,17 @@ class Session (UserDict.UserDict):
 try:
     import redis
     class SessionRedis (Session):
-        def __init__(self, sid=None, config=None):
-            Session.__init__(self, sid)
+        def __init__(self, config=None, sid=None):
             addr = config['addr'] 
             self.conn = redis.Redis(host=addr[0], port=addr[1], 
                     socket_timeout=config['timeout'], db=0)
             self.session_expire = 3600
+            Session.__init__(self, sid)
 
         def _load(self):
             v = self.conn.get(self.sid) 
+            if not v:
+                raise SessionError, 'sid %s not have value' % self.sid
             self.data.update(json.loads(v))
 
         def save(self):
@@ -53,7 +55,7 @@ except:
     pass
 
 class SessionFile (Session):
-    def __init__(self, sid=None, config=None):
+    def __init__(self, config=None, sid=None):
         self.dirname = config['dir']
         self.filename = None
    
@@ -81,9 +83,9 @@ class SessionFile (Session):
 
 
 
-def create(sid):
-    pass
-
+def create(classname, cfg, sid):
+    cls = globals()[classname]
+    return cls(cfg, sid)
 
 
 def test1():
@@ -119,8 +121,13 @@ def test2():
     s2 = SessionFile(sid, config=cf)
     print s2
 
+def test3():
+    cf = {'addr':('127.0.0.1', 6379), 'timeout':1000}
+    x = create('SessionRedis', cf, '1111111')
+
+
 
 
 if __name__ == '__main__':
-    test1()
+    test3()
 
