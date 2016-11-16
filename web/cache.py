@@ -35,7 +35,7 @@ class CacheItem:
 
 
 try:
-    from qfcommon.base import dbpool
+    from zbase.base import dbpool
 except:
     CacheDBItem = CacheItem
 else:

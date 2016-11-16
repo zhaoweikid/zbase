@@ -15,9 +15,9 @@ T_MOBILE    = 64
 
 
 TYPE_MAP = {
-    T_MAIL: "^[a-zA-Z0-9_\-\'\.]+@[a-zA-Z0-9_]+(\.[a-z]+){1,2}$",
-    T_IP: "^([0-9]{1,3}\.){3}[0-9]{1,3}$",
-    T_MOBILE: "^1[3578][0-9]{9}$"
+    T_MAIL: re.compile("^[a-zA-Z0-9_\-\'\.]+@[a-zA-Z0-9_]+(\.[a-z]+){1,2}$"),
+    T_IP: re.compile("^([0-9]{1,3}\.){3}[0-9]{1,3}$"),
+    T_MOBILE: re.compile("^1[3578][0-9]{9}$"),
 }
 #T_LIST  = 16
 
@@ -51,8 +51,18 @@ class Field:
 
         self.__dict__.update(options)
 
+        if valtype >= T_MAIL: 
+            self.match = TYPE_MAP[valtype]
+
         if self.match and type(self.match) in [types.StringType, types.UnicodeType]:
             self.match = re.compile(self.match)
+
+    def __str__(self):
+        match = ''
+        if self.match:
+            match = self.match.pattern
+        return 'name:%s type:%d match:%s isnull:%d op:%s default:%s' % \
+                (self.name, self.type, match, self.isnull, self.op, self.default)
 
 F = Field
 
@@ -65,7 +75,7 @@ class Validator:
         # fields must have isnull,type,match,name
         self._fields = []
         for f in fields:
-            if isinstance(f, str):
+            if isinstance(f, str) or isinstance(f, unicode):
                 self._fields.append(Field(name=f))
             else:
                 self._fields.append(f)
@@ -80,30 +90,16 @@ class Validator:
         elif field.type & T_STR:
             if field.match:
                 if not field.match.match(val):
-                    log.debug('validator match error: %s, %s', field.match.pattern, str(val))
+                    log.debug('validator match error: %s, %s=%s', field.match.pattern, field.name, str(val))
                     raise ValidatorError(field.name)
-            else:
-                return val
-        elif field.type in TYPE_MAP:
-            fm = TYPE_MAP[field.type]
-            if not fm.match(val):
-                log.debug('validator match error: %s, %s', fm.pattern, str(val))
-                raise ValidatorError(field.name)
-        else:
-            raise ValidatorError('%s type error' % field.name)
-
-    def _verify_item_type(self, field, val):
-        if field.type & T_INT:
-            return int(val)
-        elif field.type & T_FLOAT:
-            return float(val)
-        elif field.type & T_STR:
             return val
-        elif field.type & T_REG:
+        else:
             if not field.match.match(val):
-                return None
-        # 缺省是字符串
-        return val
+                log.debug('validator match error: %s, %s=%s', field.match.pattern, field.name, str(val))
+                raise ValidatorError(field.name)
+            return val
+
+        raise ValidatorError('%s type error' % field.name)
 
 
     def verify(self, inputdata):
@@ -286,9 +282,9 @@ def test3():
 
 
 def test4():
-    from qfcommon.base import logger
+    from zbase.base import logger
     log = logger.install('stdout')
-    from qfcommon.web.http import Request, Response
+    from zbase.web.http import Request, Response
     
     class Req: 
         def __init__(self, data):

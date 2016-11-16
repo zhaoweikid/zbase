@@ -1,10 +1,10 @@
 # coding: utf-8
 import os, sys
 import re, time, types
-from qfcommon.web import template, reloader
-from qfcommon.base import dbpool
-from qfcommon.web.http import Request, Response, NotFound
-from qfcommon.web.validator import Validator, ValidatorError
+from zbase.web import template, reloader
+from zbase.base import dbpool
+from zbase.web.http import Request, Response, NotFound
+from zbase.web.validator import Validator, ValidatorError
 import traceback, logging
 from http import MethodNotAllowed, HTTP_STATUS_CODES
 

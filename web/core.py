@@ -1,10 +1,10 @@
 # coding: utf-8
 import os, sys
 import re, time, types, mimetypes
-from qfcommon.web import template, reloader
-from qfcommon.base import dbpool
-from qfcommon.base.tools import smart_utf8
-from qfcommon.web.http import Request, Response, NotFound
+from zbase.web import template, reloader
+from zbase.base import dbpool
+from zbase.base.tools import smart_utf8
+from zbase.web.http import Request, Response, NotFound
 import traceback, logging
 from http import MethodNotAllowed
 

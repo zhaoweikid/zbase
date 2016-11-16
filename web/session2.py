@@ -13,7 +13,7 @@ class SessionError (Exception):
 
 
 class Session (UserDict.UserDict):
-    def __init__(self, sid=None):
+    def __init__(self, sid=None, expire=3600):
         UserDict.UserDict.__init__(self)
         self.sid = sid
         if sid:
@@ -30,14 +30,17 @@ class Session (UserDict.UserDict):
     def save(self):
         pass
 
+    def remove(self):
+        pass
+
 try:
     import redis
     class SessionRedis (Session):
-        def __init__(self, config=None, sid=None):
-            addr = config['addr'] 
+        def __init__(self, sid=None, server=None, expire=3600):
+            addr = server['addr']
             self.conn = redis.Redis(host=addr[0], port=addr[1], 
-                    socket_timeout=config['timeout'], db=0)
-            self.session_expire = 3600
+                    socket_timeout=server['timeout'], db=0)
+            self.session_expire = expire
             Session.__init__(self, sid)
 
         def _load(self):
@@ -51,6 +54,9 @@ try:
                 return
             v = json.dumps(self.data, separators=(',', ':'))
             self.conn.set(self.sid, v, self.session_expire)
+
+        def remove(self):
+            self.conn.delete(self.sid)
 except:
     pass
 
@@ -80,6 +86,10 @@ class SessionFile (Session):
  
         with open(self.filename, 'wb') as f:
             f.write(v)
+
+    def remove(self):
+        if os.path.isfile(self.filename):
+            os.remove(self.filename)
 
 
 

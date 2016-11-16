@@ -107,7 +107,7 @@ def with_template(tpl_file, tpl_render=None):
     return f
 
 def test():
-    from qfcommon.base import logger
+    from zbase.base import logger
     log = logger.install('stdout')
     #loc = os.path.join(path, 'templates')
     loc = '/Users/apple/projects/python/xx8xx8/web/templates/default/admin'
