@@ -6,8 +6,8 @@ import logging
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
-from qfcommon.server import selector
-from qfcommon.base.http_client import Urllib2Client
+from zbase.server import selector
+from zbase.base.http_client import Urllib2Client
 
 log = logging.getLogger()
 
@@ -180,7 +180,7 @@ def restore(selector, thriftmod, framed=False):
 
 
 #def restore(server_selector):
-#    from qfcommon.thriftclient.payprocessor import PayProcessor
+#    from zbase.thriftclient.payprocessor import PayProcessor
 #    notvalid = server_selector.not_valid()
 #    for server in notvalid:
 #        log.debug('try restore %s', server['server']['addr'])
@@ -286,8 +286,8 @@ def http_restore(selector, protocol='http', path='/ping'):
 
 
 def test_http():
-    from qfcommon.base import logger
-    from qfcommon.base.http_client import RequestsClient
+    from zbase.base import logger
+    from zbase.base.http_client import RequestsClient
     logger.install('stdout')
     SERVER   = [{'addr':('127.0.0.1', 6200), 'timeout':20},{'addr':('127.0.0.1', 6201), 'timeout':2000},]
     client = HttpClient(SERVER, client_class = RequestsClient)
@@ -297,8 +297,8 @@ def test_http():
 
 
 def test():
-    from qfcommon.thriftclient.payprocessor import PayProcessor
-    from qfcommon.base import logger
+    from zbase.thriftclient.payprocessor import PayProcessor
+    from zbase.base import logger
     global log
     logger.install('stdout')
     log = logger.log
@@ -322,8 +322,8 @@ def test():
         client.ping()
 
 def test2():
-    from qfcommon.thriftclient.encryptor import Encryptor
-    from qfcommon.base import logger
+    from zbase.thriftclient.encryptor import Encryptor
+    from zbase.base import logger
     global log
     logger.install('stdout')
     log = logger.log
@@ -339,8 +339,8 @@ def test2():
 
 
 def test3():
-    from qfcommon.thriftclient.notifier import Notifier
-    from qfcommon.base import logger
+    from zbase.thriftclient.notifier import Notifier
+    from zbase.base import logger
     global log
     logger.install('stdout')
     log.debug("test framed transport")

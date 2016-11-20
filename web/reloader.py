@@ -41,4 +41,25 @@ class Reloader:
                 self.mtimes[mod] = mtime
             except ImportError: 
                 log.debug('reload error: %s', traceback.format_exc())
+        
+    def __str__(self):
+        s = []
+        for k,v in self.mtimes.iteritems():
+            fname = k.__file__
+            if not fname.startswith('/usr') and fname.find('/python') < 0 and fname.find('zbase') < 0:
+                s.append('%s=%d'% (k, v))
+        return '\n'.join(s)
+
+class ProcReloader:
+    def __init__(self):
+        pass
+
+      
+
+
+
+
+
+
+
 

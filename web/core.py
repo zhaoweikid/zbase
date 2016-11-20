@@ -101,9 +101,9 @@ class WebApplication(object):
         self.debug = settings.DEBUG
         self.charset = settings.CHARSET
 
-        self.reloader = None
-        if self.debug:
-            self.reloader = reloader.Reloader()
+        #self.reloader = None
+        #if self.debug:
+        #    self.reloader = reloader.Reloader()
 
 
     def add_urls(self, urls, appname=''):
@@ -170,8 +170,8 @@ class WebApplication(object):
         resp = None
         viewobj = None
         try:
-            if self.reloader:
-                self.reloader()
+            #if self.reloader:
+            #    self.reloader()
             req = Request(environ)
             times.append(time.time())
             if req.path.startswith(tuple(self.settings.STATICS.keys())):

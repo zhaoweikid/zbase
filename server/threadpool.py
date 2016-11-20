@@ -160,7 +160,7 @@ class SimpleTask(Task):
         return self.name
 
 def test():
-    from qfcommon.base import logger
+    from zbase.base import logger
     global log
     log = logger.install('ScreenLogger')
     tp = ThreadPool(10)
@@ -181,7 +181,7 @@ def test():
     log.info('end')
 
 def test1():
-    from qfcommon.base import logger
+    from zbase.base import logger
     global log
     log = logger.install('stdout')
     log.info('init')
@@ -208,7 +208,7 @@ def test1():
     tp.stop()
 
 def test2():
-    from qfcommon.base import logger
+    from zbase.base import logger
     global log
     log = logger.install('stdout')
     log.info('init')
@@ -230,7 +230,7 @@ def test2():
     tp.stop()
 
 def test3():
-    from qfcommon.base import logger
+    from zbase.base import logger
     global log
     log = logger.install('stdout')
     log.info('init')
