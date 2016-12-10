@@ -92,6 +92,12 @@ class DBConnection:
         self.pool       = None
         self.server_id  = None
 
+    def __str__(self):
+        return '<%s %s:%d %s@%s>' % (self.type, 
+                self.param.get('host',''), self.param.get('port',0),
+                self.param.get('user',''), self.param.get('db',0)
+                )
+
     def is_available(self):
         return self.status == 0
 
@@ -603,21 +609,6 @@ class SQLiteConnection (DBConnection):
         return self.conn.execute(sql)
 
 
-class DBConnProxy:
-    def __init__(self, masterconn, slaveconn):
-        #self.name   = ''
-        self.master = masterconn
-        self.slave  = slaveconn
-
-        self._modify_methods = set(['execute', 'executemany', 'last_insert_id', 'insert', 'update', 'delete', 'insert_list', 'start', 'rollback', 'commit'])
-
-    def __getattr__(self, name):
-        if name in self._modify_methods:
-            return getattr(self.master, name)
-        else:
-            return getattr(self.slave, name)
-
-
 
 class DBPool (DBPoolBase):
     def __init__(self, dbcf):
@@ -723,6 +714,42 @@ class DBPool (DBPoolBase):
         return len(self.dbconn_idle), len(self.dbconn_using)
 
 
+class DBConnProxy:
+    #def __init__(self, masterconn, slaveconn):
+    def __init__(self, pool, timeout=10):
+        #self.name   = ''
+        #self.master = masterconn
+        #self.slave  = slaveconn
+        
+        self._pool = pool
+        self._master = None
+        self._slave = None
+        self._timeout = timeout
+
+        self._modify_methods = set(['execute', 'executemany', 'last_insert_id', 
+                'insert', 'update', 'delete', 'insert_list', 'start', 'rollback', 'commit'])
+
+    def __getattr__(self, name):
+        #if name.startswith('_') and name[1] != '_':
+        #    return self.__dict__[name]
+        if name in self._modify_methods:
+            if not self._master:
+                self._master = self._pool.master.acquire(self._timeout)
+            return getattr(self._master, name)
+        else:
+            if name == 'master':
+                if not self._master:
+                    self._master = self._pool.master.acquire(self._timeout)
+                return self._master
+            if name == 'slave':
+                if not self._slave:
+                    self._slave = self._pool.get_slave().acquire(self._timeout)
+                return self._slave
+            
+            if not self._slave:
+                self._slave = self._pool.get_slave().acquire(self._timeout)
+            return getattr(self._slave, name)
+
 
 class RWDBPool:
     def __init__(self, dbcf):
@@ -748,31 +775,39 @@ class RWDBPool:
     def get_master(self):
         return self.master
 
+#    def acquire(self, timeout=10):
+#        #log.debug('rwdbpool acquire')
+#        master_conn = None
+#        slave_conn  = None
+#
+#        try:
+#            master_conn = self.master.acquire(timeout)
+#            slave_conn  = self.get_slave().acquire(timeout)
+#            return DBConnProxy(master_conn, slave_conn)
+#        except:
+#            if master_conn:
+#                master_conn.pool.release(master_conn)
+#            if slave_conn:
+#                slave_conn.pool.release(slave_conn)
+#            raise
+
     def acquire(self, timeout=10):
-        #log.debug('rwdbpool acquire')
-        master_conn = None
-        slave_conn  = None
-
-        try:
-            master_conn = self.master.acquire(timeout)
-            slave_conn  = self.get_slave().acquire(timeout)
-
-            return DBConnProxy(master_conn, slave_conn)
-        except:
-            if master_conn:
-                master_conn.pool.release(master_conn)
-            if slave_conn:
-                slave_conn.pool.release(slave_conn)
-            raise
+        return DBConnProxy(self, timeout)
 
     def release(self, conn):
         #log.debug('rwdbpool release')
-        conn.master.pool.release(conn.master)
-        conn.slave.pool.release(conn.slave)
+        if conn._master:
+            #log.debug('release master')
+            conn._master.pool.release(conn._master)
+        if conn._slave:
+            #log.debug('release slave')
+            conn._slave.pool.release(conn._slave)
 
 
     def size(self):
-        ret = {'master':self.master.size(), 'slave':[]}
+        ret = {'master': (-1,-1), 'slave':[]}
+        if self.master:
+            ret['master'] = self.master.size()
         for x in self.slaves:
             key = '%s@%s:%d' % (x.dbcf['user'], x.dbcf['host'], x.dbcf['port'])
             ret['slave'].append((key, x.size()))
@@ -1273,8 +1308,96 @@ def test_base_func():
             'p.userid':DBFunc('a.id'),
         })
 
+def test_new_rw():
+    import logger
+    logger.install('stdout')
+    database = {'test':{
+                'policy': 'round_robin',
+                'default_conn':'auto',
+                'master':
+                    {'engine':'mysql',
+                     'db':'test',
+                     'host':'127.0.0.1',
+                     'port':3306,
+                     'user':'root',
+                     'passwd':'654321',
+                     'charset':'utf8',
+                     'conn':10}
+                 ,
+                 'slave':[
+                    {'engine':'mysql',
+                     'db':'test',
+                     'host':'127.0.0.1',
+                     'port':3306,
+                     'user':'root',
+                     'passwd':'654321',
+                     'charset':'utf8',
+                     'conn':10
+                    },
+                    {'engine':'mysql',
+                     'db':'test',
+                     'host':'127.0.0.1',
+                     'port':3306,
+                     'user':'root',
+                     'passwd':'654321',
+                     'charset':'utf8',
+                     'conn':10
+                    }
 
+                 ]
+             }
+            }
+    install(database)
+    
+    def printt(t=0):
+        now = time.time()
+        if t > 0:
+            print 'time:', now-t
+        return now
 
+    t = printt()
+    with get_connection('test') as conn:
+        t = printt(t)
+        print 'master:', conn._master, 'slave:', conn._slave
+        assert conn._master == None
+        assert conn._slave == None
+        ret = conn.query("select 10")
+        t = printt(t)
+        print 'after read master:', conn._master, 'slave:', conn._slave
+        assert conn._master == None
+        assert conn._slave != None
+        conn.execute('create table if not exists haha (id int(4) not null primary key, name varchar(128) not null)')
+        t = printt(t)
+        print 'master:', conn._master, 'slave:', conn._slave
+        assert conn._master != None
+        assert conn._slave != None
+        conn.execute('drop table haha')
+        t = printt(t)
+        assert conn._master != None
+        assert conn._slave != None
+        print 'ok'
+
+    print '=' * 20
+    t = printt()
+    with get_connection('test') as conn:
+        t = printt(t)
+        print 'master:', conn._master, 'slave:', conn._slave
+        assert conn._master == None
+        assert conn._slave == None
+
+        ret = conn.master.query("select 10")
+        assert conn._master != None
+        assert conn._slave == None
+ 
+        t = printt(t)
+        print 'after query master:', conn._master, 'slave:', conn._slave
+        ret = conn.query("select 10")
+        assert conn._master != None
+        assert conn._slave != None
+ 
+        print 'after query master:', conn._master, 'slave:', conn._slave
+        print 'ok'
+     
 if __name__ == '__main__':
     #test_with()
     #test5()
@@ -1283,5 +1406,9 @@ if __name__ == '__main__':
     #test3()
     #test4()
     #test()
-    test_base_func()
+    #test_base_func()
+    test_new_rw()
     print 'complete!'
+
+
+
