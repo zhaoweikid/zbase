@@ -151,7 +151,7 @@ def install(logdict, **options):
 def test6():
     install({
         'root': {
-            'filename': {'DEBUG':"test-info.log", 'ERROR':'test-err.log'},
+            'filename': {'DEBUG':"test.log", 'ERROR':'test-err.log'},
         },
         'mytest': {
             'filename':'stdout',
@@ -186,6 +186,20 @@ def test1():
         log.fatal('fatal ... %d', i)
 
 
+def test2():
+    import time
+    install({'root':{'filename':{'DEBUG':'test.log', 'WARN':'test.warn.log'}}}, when="S", backupCount=3)
+    log = logging.getLogger()
+    for i in range(0, 10):
+        log.debug('debug ... %d', i)
+        log.info('info ... %d', i)
+        log.warn('warn ... %d', i)
+        log.error('error ... %d', i)
+        log.fatal('fatal ... %d', i)
+        time.sleep(1)
+
+
+
 if __name__ == '__main__':
-    #test1()
-    test6()
+    test1()
+    #test2()

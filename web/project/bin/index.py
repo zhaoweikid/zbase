@@ -4,9 +4,9 @@ import os
 import sys
 import logging
 import time
-from qfcommon.web import core
-from qfcommon.web import template
-from qfcommon.base.dbpool import with_database
+from zbase.web import core
+from zbase.web import template
+from zbase.base.dbpool import with_database
 
 import config
 

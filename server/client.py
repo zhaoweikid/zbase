@@ -8,15 +8,22 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from zbase.server import selector
 from zbase.base.http_client import Urllib2Client
+#from zbase.base import getconf
+#from zbase.web import cache
 
 log = logging.getLogger()
 
 class ThriftClientError(Exception):
     pass
 
+#def load_name(key, data):
+#    return getconf.get_name_base(key)
+#etcd_cache = cache.CacheDict(load_name, 60)
+
 class ThriftClient:
     def __init__(self, server, thriftmod, timeout=0, framed=False, raise_except=False):
         '''server - 为Selector对象，或者地址{'addr':('127.0.0.1',5000),'timeout':1000}'''
+        global etcd_cache
         self.starttime = time.time()
         self.server_selector  = None
         self.server = None
@@ -33,6 +40,8 @@ class ThriftClient:
         elif isinstance(server, list): # server列表，需要创建selector，策略为随机
             self.server = server
             self.server_selector = selector.Selector(self.server, 'random')
+        #elif isinstance(server, str) or isinstance(server, unicode):
+        #    self.server = etcd_cache[server]
         else: # 直接是selector
             self.server_selector = server
         while True:
@@ -114,11 +123,12 @@ class ThriftClient:
             if pos > 0:
                 tname = tname[pos+1:]
 
-            s = 'server=%s|func=%s|addr=%s:%d/%d|time=%d|args=%d|kwargs=%d' % \
+            s = 'server=%s|func=%s|addr=%s:%d/%d|time=%d|framed=%s|args=%d|kwargs=%d' % \
                     (tname, funcname,
                     addr[0], addr[1],
                     self.server['server']['timeout'],
                     int((endtime-starttime)*1000000),
+                    self.frame_transport,
                     len(args), len(kwargs))
             if err:
                 s += '|err=%s' % (repr(err))
@@ -238,6 +248,8 @@ class HttpClient:
         elif isinstance(server, list): # server列表，需要创建selector，策略为随机
             self.server = server
             self.server_selector = selector.Selector(self.server, 'random')
+        #elif isinstance(server, str) or isinstance(server, unicode):
+        #    self.server = etcd_cache[server]
         else: # 直接是selector
             self.server_selector = server
 
@@ -359,10 +371,19 @@ def test3():
     ret = client.send_notify(json.dumps(notify))
     log.debug("send notify return:%s", ret)
 
-
+def test4():
+    from zbase.thriftclient.payprocessor import PayProcessor
+    from zbase.base import logger
+    global log
+    log = logger.install('stdout')
+    log.debug('test ...')
+    server_name = 'paycore'
+    for i in range(0, 10):
+        client = ThriftClient(server_name, PayProcessor)
+        client.ping()
 
 if __name__ == '__main__':
-    test2()
+    test3()
     # test_http()
 
 

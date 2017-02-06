@@ -28,6 +28,7 @@ class Handler(object):
         self.ses = {}
         self.resp = Response()
         self.write = self.resp.write
+        req.allowed_methods = []
 
     def initial(self):
         pass
@@ -53,7 +54,25 @@ class Handler(object):
     def GET(self):
         self.resp = MethodNotAllowed()
 
-    POST = HEAD = DELETE = GET
+    POST = HEAD = DELETE = PUT = GET
+
+    def OPTIONS(self):
+        '''
+            OPTIONS请求方法的主要用途有两个：
+            1、获取服务器支持的HTTP请求方法；也是黑客经常使用的方法。
+            2、用来检查服务器的性能。例如：
+                AJAX进行跨域请求时的预检，需要向另外一个域名的资源发送一个HTTP OPTIONS请求头，用以判断实际发送的请求是否安全。
+        '''
+        origin = self.req.environ.get('HTTP_ORIGIN','')
+        self.resp.headers['Access-Control-Allow-Origin'] = origin
+        self.resp.headers['Access-Control-Allow-Credentials'] = 'true'
+        self.resp.headers['Access-Control-Allow-Methods'] = ','.join(self.allowed_methods)
+        # request headers
+        req_headers = self.req.environ.get('HTTP_ACCESS_CONTROL_REQUEST_HEADERS', '')
+        self.resp.headers['Access-Control-Allow-Headers'] = req_headers
+        self.resp.headers['Access-Control-Max-Age'] = '86400'  # ,允许这个预请求的参数缓存的秒数,在此期间,不用发出另一条预检请求
+        self.resp.status=200
+        return
 
     def render(self, *args, **kwargs):
         if template.render:
@@ -84,7 +103,7 @@ class WebApplication(object):
         if isinstance(settings.STATICS, list) or isinstance(settings.STATICS, tuple):
             settings.STATICS = dict(zip(settings.STATICS,settings.STATICS))
 
-        self.allowed_methods = set(('GET', 'HEAD', 'POST', 'DELETE', 'PUT'))
+        self.allowed_methods = set(('GET', 'HEAD', 'POST', 'DELETE', 'PUT', 'OPTIONS'))
         self.charset = 'utf-8'
 
         self.urls = []
@@ -101,9 +120,9 @@ class WebApplication(object):
         self.debug = settings.DEBUG
         self.charset = settings.CHARSET
 
-        #self.reloader = None
-        #if self.debug:
-        #    self.reloader = reloader.Reloader()
+        self.reloader = None
+        if self.debug:
+            self.reloader = reloader.Reloader()
 
 
     def add_urls(self, urls, appname=''):
@@ -170,8 +189,8 @@ class WebApplication(object):
         resp = None
         viewobj = None
         try:
-            #if self.reloader:
-            #    self.reloader()
+            if self.reloader:
+                self.reloader()
             req = Request(environ)
             times.append(time.time())
             if req.path.startswith(tuple(self.settings.STATICS.keys())):
@@ -187,7 +206,7 @@ class WebApplication(object):
                     match = regex.match(req.path)
                     if match is not None:
                         if req.method not in self.allowed_methods:
-                            raise NotImplemented()
+                            raise NotImplemented
                         args    = ()
                         mkwargs = match.groupdict()
                         if mkwargs:
@@ -202,6 +221,7 @@ class WebApplication(object):
                         middleware = []
                         try:
                             viewobj.initial()
+                            viewobj.allowed_methods = self.allowed_methods
 
                             for x in self.settings.MIDDLEWARE:
                                 obj = x()
@@ -246,7 +266,7 @@ class WebApplication(object):
                 s.append(req.query_string[:2048])
             if req.method == 'POST':
                 s.append(str(req.input())[:2048])
-            if type(req.storage.value) == types.StringType:
+            if req.storage is not None and type(req.storage.value) == types.StringType:
                 s.append(req.storage.value)
             if resp.content and resp.headers['Content-Type'].startswith('application/json'):
                 s.append(str(resp.content)[:4096])

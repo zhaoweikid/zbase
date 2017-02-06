@@ -126,7 +126,7 @@ def test():
     sender.send(m)
 
 def test1():
-    from qfcommon.base import logger
+    from zbase.base import logger
     logger.install('stdout')
     sendmail_balance(
             [

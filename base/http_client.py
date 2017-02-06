@@ -123,10 +123,14 @@ class HTTPClient:
         if 'headers' in kwargs:
             header.update(kwargs.pop('headers'))
 
-        if isinstance(json_dict, types.DictType):
+        if isinstance(json_dict, dict):
             post_data = json.dumps(json_dict, ensure_ascii = escape)
         else:
             post_data = json_dict
+
+        if isinstance(post_data, unicode):
+            post_data = post_data.encode('utf-8')
+
         content, code, headers = self.request('post', url, header, post_data, **kwargs)
 
         return content
@@ -142,9 +146,9 @@ class HTTPClient:
                     u_key = key.decode('utf-8')
                 else:
                     u_key = unicode(key)
-                if isinstance(root[key], types.DictType):
+                if isinstance(root[key], dict):
                     xml = '%s<%s>%s%s</%s>%s' % (xml, u_key, sep, serialize(root[key], sep), u_key, sep)
-                elif isinstance(root[key], types.ListType):
+                elif isinstance(root[key], list):
                     xml = '%s<%s>' % (xml, u_key)
                     for item in root[key]:
                         xml = '%s%s' % (xml, serialize(item,sep))
@@ -163,9 +167,9 @@ class HTTPClient:
         if 'headers' in kwargs:
             header.update(kwargs.pop('headers'))
 
-        if isinstance(xml, types.DictType):
+        if isinstance(xml, dict):
             xml = serialize(xml)
-        if type(xml) == types.UnicodeType:
+        if isinstance(xml, unicode):
             xml = xml.encode('utf-8')
         content, code, headers = self.request('post', url, header, xml, **kwargs)
 
@@ -182,6 +186,9 @@ class Urllib3Client(HTTPClient):
     def request(self, method, url, headers, post_data=None,  **kwargs):
         import urllib3
         urllib3.disable_warnings()
+
+        # 连接错误重试三次
+        retry = urllib3.util.Retry(total=3, connect=3, read=0, redirect=0)
 
         pool_kwargs = {}
         if self._verify_ssl_certs:
@@ -204,7 +211,7 @@ class Urllib3Client(HTTPClient):
             conn = urllib3.connection_from_url(url)
             url = urlparse.urlparse(url).path
 
-        result = conn.request(method=method, url=url, body=post_data, headers=headers, timeout=self._timeout, **kwargs)
+        result = conn.request(method=method, url=url, body=post_data, headers=headers, timeout=self._timeout, retries=retry, **kwargs)
 
         self.content, self.code, self.headers = result.data, result.status, result.headers
 

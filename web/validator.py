@@ -9,6 +9,7 @@ log = logging.getLogger()
 T_INT       = 1
 T_STR       = 2
 T_FLOAT     = 4
+T_DOUBLE    = T_FLOAT
 T_REG       = 8
 T_MAIL      = 16
 T_IP        = 32
@@ -190,6 +191,8 @@ class Validator:
             except ValidatorError:
                 result.append(f.name)
                 log.warn(traceback.format_exc())
+            except ValueError:
+                result.append(f.name)
             except:
                 result.append(f.name)
                 log.info(traceback.format_exc())
@@ -204,6 +207,7 @@ class Validator:
 
 
 def check_validator(fields):
+    '''不建议再使用'''
     def f(func):
         def _(self, *args, **kwargs):
             vadt = Validator(fields)
@@ -220,6 +224,7 @@ def with_validator(fields, errfunc=None):
     def f(func):
         def _(self, *args, **kwargs):
             vdt = Validator(fields)
+            self.validator = vdt
             ret = vdt.verify(self.req.input())
             log.debug('validator check:%s', ret)
             if ret:
@@ -229,10 +234,10 @@ def with_validator(fields, errfunc=None):
                 else:
                     self.resp.status = 400
                     return 'input error'
-            self.validator = vdt
             return func(self, *args, **kwargs)
         return _
     return f
+
 
 def with_validator_self(func):
     def _(self, *args, **kwargs):
@@ -334,17 +339,45 @@ def test3():
 
 
 def test4():
+    from zbase.base import logger
+    log = logger.install('stdout')
+    from zbase.web.http import Request, Response
+    
+    class Req: 
+        def __init__(self, data):
+            self.data = data
+
+        def input(self):
+            return self.data
+
     class Test:
         def __init__(self):
-            self.input = {'name':'aaaaa', 'age':'12', 'money':'12.44'}
+            self.req = Req({'name':'aaaaa', 'age':'12', 'money':'12.44'})
+            self.resp = Response()
 
         @with_validator([Field('age', T_INT), Field('money', T_INT), Field('name'),])
         def testfunc(self):
             log.info('testfunc ...')
 
+        @with_validator([Field('age', T_INT), Field('money', T_FLOAT), Field('name'),])
+        def testfunc2(self):
+            log.info('testfunc2 ...')
+
+        @with_validator([Field('age', T_INT), Field('money', T_FLOAT), Field('name', T_STR),])
+        def testfunc3(self):
+            log.info('testfunc3 ...')
+
+
     t = Test()
     t.testfunc()
     log.info('after validator: %s', t.validator.data)
+    
+    t.testfunc2()
+    log.info('after validator: %s', t.validator.data)
+
+    t.testfunc3()
+    log.info('after validator: %s', t.validator.data)
+
 
 
 

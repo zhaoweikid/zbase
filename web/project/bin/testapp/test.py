@@ -2,7 +2,7 @@
 
 import os
 import sys
-from qfcommon.web import core
+from zbase.web import core
 
 class TestApp(core.Handler):
     def GET(self):

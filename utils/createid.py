@@ -32,7 +32,7 @@ def unpack_id64_time(xid):
     return datetime.datetime.fromtimestamp(int(msec/1000.0))
 
 def test():
-    from qfcommon.base import logger, dbpool
+    from zbase.base import logger, dbpool
     logger.install('stdout')
     DATABASE = {'test': # connection name, used for getting connection from pool
                 {'engine':'mysql',   # db type, eg: mysql, sqlite

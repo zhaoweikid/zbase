@@ -67,7 +67,6 @@ class ThreadPool:
                 try:
                     task = self.queue.get(timeout=1)
                     #task = self.queue.get()
-
                     if not task:
                         log.error('get task none')
                         return
@@ -122,12 +121,12 @@ class Task (object):
     def set_result(self, result):
         self._result = result
 
-    def get_result(self, timeout=1):
+    def get_result(self, timeout=1000):
         return self._result
 
 
 
-class TaskWait(object):
+class TaskWait(Task):
     def __init__(self, func=None, *args, **kwargs):
         super(TaskWait, self).__init__(func, *args, **kwargs)
         self._event = threading.Event()
@@ -136,10 +135,10 @@ class TaskWait(object):
         self._result = result
         self._event.set()
 
-    def get_result(self, timeout=1):
+    def get_result(self, timeout=1000):
         try:
             #log.info('wait ...')
-            self._event.wait(timeout)
+            self._event.wait(timeout/1000.0)
             #log.info('wait timeout ...')
         except:
             log.info(traceback.format_exc())
@@ -222,10 +221,10 @@ def test2():
         return name + '!!!'
 
     log.info('add ...')
-    t = Task(func=run, name='haha')
+    t = TaskWait(func=run, name='haha')
     tp.add(t)
 
-    log.info('result:%s', t.get_result(1000))
+    log.info('result:%s', t.get_result(2))
 
     tp.stop()
 
@@ -296,7 +295,8 @@ def test_profile():
 
 if __name__ == '__main__':
     try:
-        test_profile()
+        #test_profile()
+        test2()
     except KeyboardInterrupt:
         os.kill(os.getpid(), 9)
 

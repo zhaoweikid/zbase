@@ -132,7 +132,6 @@ class Cacher(UserDict.UserDict):
         self.data[obj.key] = obj
         return True
 
-
     def set_value(self, key, val, func, tm=60):
         item = CacheItem(key, tm)
         #item.last_time = int(time.time())
@@ -146,6 +145,24 @@ class Cacher(UserDict.UserDict):
     def __setitem__(self, key, value):
         self.data[key] = value
 
+# 新的缓存字典
+class CacheDict (UserDict.UserDict):
+    def __init__(self, update_func, timeout=60):
+        UserDict.UserDict.__init__(self)
+        self._cache_info = {}
+        self._update_func = update_func
+        self._timeout = timeout
+
+    def __getitem__(self, key):
+        data = self.data.get(key)
+        info = self._cache_info.get(key)
+        now = time.time()
+        if not data or not info or now-info['last'] >= self._timeout:
+            data = self._update_func(key, data)
+            self._cache_info[key] = {'last':now}
+            self.data[key] = data
+        return data
+ 
 
 def install():
     global caches
@@ -175,22 +192,22 @@ def test1():
             return defv + 1
 
     c = Cacher()
-    x = MyCacheItem(3)
+    x = MyCacheItem(1)
     x.data = 1000
     c['a'] = x
 
-    for i in range(0, 10):
+    for i in range(0, 5):
         print 'a:', c['a']
-        time.sleep(1)
+        time.sleep(0.5)
 
     def change(defv):
         return defv + 1
 
-    c.set_value('b', 100, change, 3)
+    c.set_value('b', 100, change, 1)
 
-    for i in range(0, 10):
+    for i in range(0, 5):
         print 'b:', c['b']
-        time.sleep(1)
+        time.sleep(0.5)
 
 def test2():
     install()
@@ -244,8 +261,19 @@ def test4():
     print m.get('haha')
 
 
+def test5():
+    
+    def func(key, data):
+        print 'key:', key, 'data:', data
+        return 'name-%.3f' % time.time()
+
+    c = CacheDict(func, 0.5)
+    for i in range(0, 10):
+        print c['name']
+        time.sleep(.2)
+
 if __name__ == '__main__':
-    test2()
+    test5()
 
 
 

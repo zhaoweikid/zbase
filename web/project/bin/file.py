@@ -3,9 +3,9 @@
 import os
 import sys
 import logging
-from qfcommon.web import core
-from qfcommon.base import dbpool
-from qfcommon.base.dbpool import with_database
+from zbase.web import core
+from zbase.base import dbpool
+from zbase.base.dbpool import with_database
 
 log = logging.getLogger()
 

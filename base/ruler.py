@@ -122,14 +122,14 @@ class RuleSet(object):
                 if getattr(operator, RuleSet.op_method[oper])(rule, input):
                     continue
                 else:
-                    log.debug("rule:%s not target", str('%s %s %s' % (rule.name, rule.op, rule.result))[:20])
+                    log.debug("rule:%s not target", str('%s %s %s' % (rule.name, rule.op, rule.result))[:100])
                     return False
                 #match_result += 1 if getattr(operator, RuleSet.op_method[oper])(rule, input) else 0
             else:
                 if getattr(rule, oper)(input):
                     continue
                 else:
-                    log.debug("rule:%s not target", str('%s %s %s' % (rule.name, rule.op, rule.result))[:20])
+                    log.debug("rule:%s not target", str('%s %s %s' % (rule.name, rule.op, rule.result))[:100])
                     return False
                 #match_result += 1 if getattr(rule, oper)(input) else 0
         return True

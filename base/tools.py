@@ -1,6 +1,6 @@
 # coding: utf-8
 import types, json
-from qfcommon.server.client import ThriftClient
+from zbase.server.client import ThriftClient
 import traceback
 from dbpool import acquire, release, install
 import logging

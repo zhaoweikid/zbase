@@ -43,6 +43,7 @@ class SocketTransport (TTransport.TTransportBase):
 
 class GTServer(TServer):
     """
+    建议不再使用，使用start_gstream
     Gevent socket server based on TServer
     used must after gevent monkey patch
     @yushijun
@@ -269,7 +270,7 @@ def start_gevent(module, handler_class, my_process, addr, max_conn=1000, max_pro
     server.start()
 
     def server_start():
-        do_trans_all_logger()
+        # do_trans_all_logger()
         log.info('server started addr=%s:%d pid=%d', addr[0], addr[1], os.getpid())
         server.serve_forever()
 
@@ -311,7 +312,7 @@ def start_threadpool(module, handler_class, addr, max_thread=1, max_proc=1):
 
 
     def thread_run():
-        do_trans_all_logger()
+        # do_trans_all_logger()
 
         def run(obj, client, addr):
             return handle(client, addr)

@@ -5,7 +5,7 @@ import sys
 HOME = os.path.dirname(os.path.abspath(__file__))
 #sys.path.append(os.path.join(os.path.dirname(HOME), 'conf'))
 
-from qfcommon.base import logger,loader
+from zbase.base import logger,loader
 if __name__ == '__main__':
     loader.loadconf_argv(HOME)
 else:
@@ -20,9 +20,9 @@ if config.LOGFILE:
 else:
     log = logger.install('stdout')
 
-from qfcommon.base import dbpool
-from qfcommon.web import core
-from qfcommon.web import runner
+from zbase.base import dbpool
+from zbase.web import core
+from zbase.web import runner
 
 # 导入数据库
 dbpool.install(config.DATABASE)

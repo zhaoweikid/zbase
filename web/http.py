@@ -34,14 +34,16 @@ class Request(object):
         safe_environ = {'QUERY_STRING':''}
         for key in ('REQUEST_METHOD', 'CONTENT_TYPE', 'CONTENT_LENGTH'):
             if key in self.environ: safe_environ[key] = self.environ[key]
-
-        self.storage = cgiutils.FieldStorage(fp=environ.get('wsgi.input', None), environ=safe_environ, keep_blank_values=True)
         self.method  = environ.get('REQUEST_METHOD', '')
         self.path    = environ.get('PATH_INFO', '')
         self.host    = environ.get('HTTP_HOST', '')
         self.cookie  = {}
         self.query_string = environ.get('QUERY_STRING', '')
         self._parse_cookie()
+        if self.method != 'OPTIONS':
+            self.storage = cgiutils.FieldStorage(fp=environ.get('wsgi.input', None), environ=safe_environ, keep_blank_values=True)
+        else:
+            self.storage = None
 
     def _parse_cookie(self):
         cookiestr = self.environ.get('HTTP_COOKIE', '')
@@ -87,7 +89,7 @@ class Request(object):
         if self._input:
             return self._input
         data = self._parse_query_string()
-        if self.storage.list:
+        if self.storage is not None  and self.storage.list:
             for k in self.storage.list:
                 if k.filename:
                     data[k.name] = k.file
@@ -97,25 +99,29 @@ class Request(object):
         return self._input
 
     def postdata(self):
+        if self.storage is None:
+            return ''
+
         return self.storage.value
 
     def inputjson(self):
         data = self.input()
-        postdata = self.storage.value
-        if postdata and postdata[0] == '{' and postdata[-1] == '}':
-            try:
-                obj = json.loads(postdata)
-                data.update(obj)
-                self._input = data
-            except Exception, e:
-                log.warning('json load error:%s', e)
+        if self.storage is not None:
+            postdata = self.storage.value
+            if postdata and postdata[0] == '{' and postdata[-1] == '}':
+                try:
+                    obj = json.loads(postdata)
+                    data.update(obj)
+                    self._input = data
+                except Exception, e:
+                    log.warning('json load error:%s', e)
         return data
 
     def files(self):
         if self._files:
             return self._files
         data = []
-        if self.storage.list:
+        if self.storage is not None and self.storage.list:
             for k in self.storage.list:
                 if k.filename:
                     data.append(k)
