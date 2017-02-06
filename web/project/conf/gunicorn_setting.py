@@ -3,14 +3,16 @@
 import os
 import sys
 HOME = os.path.dirname(os.path.abspath(__file__))
+BIN = os.path.join(os.path.dirname(HOME), 'bin')
 sys.path.append(os.path.join(os.path.dirname(HOME), 'conf'))
+sys.path.append(BIN)
 
 import config as myconfig
 
 bind = '%s:%s' % (myconfig.HOST, myconfig.PORT)
-chdir = HOME
+chdir = BIN
 #daemon = True
-workers = 16
+workers = 1
 threads = 8
 #worker_class = 'sync'
 worker_class = 'gevent'

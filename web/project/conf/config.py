@@ -25,7 +25,7 @@ DATABASE = {
         'host': '127.0.0.1',
         'port': 3306,
         'user': 'root',
-        'passwd': '654321',
+        'passwd': '123456',
         'charset': 'utf8',
         'conn': 10,
     },

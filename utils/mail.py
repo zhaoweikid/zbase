@@ -81,7 +81,7 @@ class MailSender:
             return False
 
 def sendmail(mailto, subject, content, files=None):
-    m = MailMessage(subject, 'receipt@qfpay.net', mailto, content)
+    m = MailMessage(subject, 'receipt@xxx.net', mailto, content)
 
     if files:
         if type(files) in (types.TupleType, types.ListType):
@@ -90,7 +90,7 @@ def sendmail(mailto, subject, content, files=None):
         elif type(files) in (types.StringType, types.UnicodeType):
             m.append_file(files, 'application/octet-stream')
 
-    sender = MailSender('smtp.exmail.qq.com', 'receipt@qfpay.net', 'QianFang%911')
+    sender = MailSender('smtp.exmail.qq.com', 'receipt@xxx.net', 'QianFang%911')
     return sender.send(m)
 
 def sendmail_from(frominfo, mailto, subject, content, files=None):
@@ -118,11 +118,11 @@ def sendmail_balance(frominfos, mailto, subject, content, files=None):
             continue
 
 def test():
-    m = MailMessage('test测试邮件', 'receipt@qfpay.net', 'zhaowei@qfpay.net', 'test content我们')
+    m = MailMessage('test测试邮件', 'receipt@xxx.net', 'zhaowei@xxx.net', 'test content我们')
     m.append_file('mail.py', 'text/plain')
     print m.tostring()
 
-    sender = MailSender('smtp.exmail.qq.com', 'receipt@qfpay.net', '')
+    sender = MailSender('smtp.exmail.qq.com', 'receipt@xxx.net', '')
     sender.send(m)
 
 def test1():
@@ -130,19 +130,19 @@ def test1():
     logger.install('stdout')
     sendmail_balance(
             [
-             {'smtp':'smtp.exmail.qq.com', 'from':'yuanyuejiang@qfpay.com', 'password':''},
-             {'smtp':'smtp.exmail.qq.com', 'from':'zhangshuang@qfpay.com', 'password':''},
+             {'smtp':'smtp.exmail.qq.com', 'from':'yuanyuejiang@xxx.com', 'password':''},
+             {'smtp':'smtp.exmail.qq.com', 'from':'zhangshuang@xxx.com', 'password':''},
             ],
-            'yuanyuejiang@qfpay.com', 'haha', 'content test 222')
+            'yuanyuejiang@xxx.com', 'haha', 'content test 222')
 
 def test_attachment():
-    m = MailMessage('test测试邮件', 'receipt@qfpay.net', 'xiangwei@qfpay.com', 'test content我们')
+    m = MailMessage('test测试邮件', 'receipt@xxx.net', 'xiangwei@xxx.com', 'test content我们')
     f = open('mail.py', 'r')
     data = f.read()
     m.append_data(data, attachname='mail.py')
     print m.tostring()
 
-    sender = MailSender('smtp.exmail.qq.com', 'receipt@qfpay.net', '')
+    sender = MailSender('smtp.exmail.qq.com', 'receipt@xxx.net', '')
     sender.send(m)
     f.close()
 
