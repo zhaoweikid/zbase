@@ -1,7 +1,7 @@
 # coding: utf-8
 import os, sys
 import re, time, types, mimetypes
-from zbase.web import template, reloader
+from zbase.web import template #, reloader
 from zbase.base import dbpool
 from zbase.base.tools import smart_utf8
 from zbase.web.http import Request, Response, NotFound
@@ -120,9 +120,9 @@ class WebApplication(object):
         self.debug = settings.DEBUG
         self.charset = settings.CHARSET
 
-        self.reloader = None
-        if self.debug:
-            self.reloader = reloader.Reloader()
+        #self.reloader = None
+        #if self.debug:
+        #    self.reloader = reloader.Reloader()
 
 
     def add_urls(self, urls, appname=''):
@@ -160,8 +160,8 @@ class WebApplication(object):
             template.install(tplcf['path'], tplcf['tmp'], tplcf['cache'],
                              self.settings.CHARSET)
 
-        if self.settings.DATABASE:
-            dbpool.install(self.settings.DATABASE)
+        #if self.settings.DATABASE:
+        #    dbpool.install(self.settings.DATABASE)
 
         for appname in self.settings.APPS:
             self.add_app(appname)
@@ -189,8 +189,8 @@ class WebApplication(object):
         resp = None
         viewobj = None
         try:
-            if self.reloader:
-                self.reloader()
+            #if self.reloader:
+            #    self.reloader()
             req = Request(environ)
             times.append(time.time())
             if req.path.startswith(tuple(self.settings.STATICS.keys())):
