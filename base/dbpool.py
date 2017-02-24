@@ -830,6 +830,9 @@ def checkalive(name=None):
 
 def install(cf):
     global dbpool
+    if dbpool:
+        log.warn("too many install db")
+        return dbpool
     dbpool = {}
 
     for name,item in cf.iteritems():
@@ -1397,6 +1400,30 @@ def test_new_rw():
  
         print 'after query master:', conn._master, 'slave:', conn._slave
         print 'ok'
+
+def test_db_install():
+    import logger
+    logger.install('stdout')
+    DATABASE = {'test': # connection name, used for getting connection from pool
+                {'engine':'mysql',   # db type, eg: mysql, sqlite
+                 'db':'qiantai',        # db name
+                 'host':'172.100.101.156', # db host
+                 'port':3306,        # db port
+                 'user':'qf',      # db user
+                 'passwd':'123456',  # db password
+                 'charset':'utf8',   # db charset
+                 'conn':10}          # db connections in pool
+           }
+
+    install(DATABASE)
+    install(DATABASE)
+    install(DATABASE)
+    install(DATABASE)
+
+    with get_connection('test') as conn:
+        print conn.select_one('order')
+
+
      
 if __name__ == '__main__':
     #test_with()
@@ -1407,7 +1434,8 @@ if __name__ == '__main__':
     #test4()
     #test()
     #test_base_func()
-    test_new_rw()
+    #test_new_rw()
+    test_db_install()
     print 'complete!'
 
 

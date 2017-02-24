@@ -25,7 +25,7 @@ from zbase.web import core
 from zbase.web import runner
 
 # 导入数据库
-dbpool.install(config.DATABASE)
+#dbpool.install(config.DATABASE)
 
 # 导入WEB URLS
 config.URLS = urls.urls

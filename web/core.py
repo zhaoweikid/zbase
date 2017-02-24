@@ -160,8 +160,8 @@ class WebApplication(object):
             template.install(tplcf['path'], tplcf['tmp'], tplcf['cache'],
                              self.settings.CHARSET)
 
-        #if self.settings.DATABASE:
-        #    dbpool.install(self.settings.DATABASE)
+        if self.settings.DATABASE:
+            dbpool.install(self.settings.DATABASE)
 
         for appname in self.settings.APPS:
             self.add_app(appname)

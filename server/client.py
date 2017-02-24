@@ -287,7 +287,7 @@ def http_restore(selector, protocol='http', path='/ping'):
         try:
             log.debug('try restore %s', server['server']['addr'])
             domain = '%s://%s:%d' % (protocol, server['server']['addr'][0], server['server']['addr'][1])
-            Urllib2Client().get(domain + path)
+            Urllib2Client(timeout=3).get(domain + path)
         except:
             log.error(traceback.format_exc())
             log.debug("restore fail: %s", server['server']['addr'])
