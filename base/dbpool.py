@@ -24,6 +24,8 @@ def timeit(func):
                 num = len(retval)
             elif t == types.DictType:
                 num = 1
+            elif t == types.IntType:
+                ret = retval
             return retval
         except Exception, e:
             err = str(e)
@@ -93,7 +95,7 @@ class DBConnection:
         self.server_id  = None
 
     def __str__(self):
-        return '<%s %s:%d %s@%s>' % (self.type, 
+        return '<%s %s:%d %s@%s>' % (self.type,
                 self.param.get('host',''), self.param.get('port',0),
                 self.param.get('user',''), self.param.get('db',0)
                 )
@@ -669,7 +671,8 @@ class DBPool (DBPoolBase):
         if dels:
             log.debug('close timeout db conn:%d', len(dels))
         for c in dels:
-            c.close()
+            if c.conn:
+                c.close()
             self.dbconn_idle.remove(c)
 
     @synchronize
@@ -689,7 +692,10 @@ class DBPool (DBPoolBase):
         self.dbconn_using.append(conn)
 
         if random.randint(0, 100) > 80:
-            self.clear_timeout()
+            try:
+                self.clear_timeout()
+            except:
+                log.error(traceback.format_exc())
 
         return conn
 
@@ -720,13 +726,13 @@ class DBConnProxy:
         #self.name   = ''
         #self.master = masterconn
         #self.slave  = slaveconn
-        
+
         self._pool = pool
         self._master = None
         self._slave = None
         self._timeout = timeout
 
-        self._modify_methods = set(['execute', 'executemany', 'last_insert_id', 
+        self._modify_methods = set(['execute', 'executemany', 'last_insert_id',
                 'insert', 'update', 'delete', 'insert_list', 'start', 'rollback', 'commit'])
 
     def __getattr__(self, name):
@@ -745,7 +751,7 @@ class DBConnProxy:
                 if not self._slave:
                     self._slave = self._pool.get_slave().acquire(self._timeout)
                 return self._slave
-            
+
             if not self._slave:
                 self._slave = self._pool.get_slave().acquire(self._timeout)
             return getattr(self._slave, name)
@@ -1299,7 +1305,7 @@ def test_base_func():
             'username':'13512345677',
             'password':'123',
             'mobile':'13512345677',
-            'email':'123@xxx.cn',
+            'email':'123@haha.cn',
         })
         print  conn.select('auth_user',{
             'username':'13512345677',
@@ -1351,7 +1357,7 @@ def test_new_rw():
              }
             }
     install(database)
-    
+
     def printt(t=0):
         now = time.time()
         if t > 0:
@@ -1391,13 +1397,13 @@ def test_new_rw():
         ret = conn.master.query("select 10")
         assert conn._master != None
         assert conn._slave == None
- 
+
         t = printt(t)
         print 'after query master:', conn._master, 'slave:', conn._slave
         ret = conn.query("select 10")
         assert conn._master != None
         assert conn._slave != None
- 
+
         print 'after query master:', conn._master, 'slave:', conn._slave
         print 'ok'
 
@@ -1405,7 +1411,7 @@ def test_db_install():
     import logger
     logger.install('stdout')
     DATABASE = {'test': # connection name, used for getting connection from pool
-                {'engine':'mysql',   # db type, eg: mysql, sqlite
+                {'engine':'pymysql',   # db type, eg: mysql, sqlite
                  'db':'qiantai',        # db name
                  'host':'172.100.101.156', # db host
                  'port':3306,        # db port
@@ -1421,10 +1427,11 @@ def test_db_install():
     install(DATABASE)
 
     with get_connection('test') as conn:
-        print conn.select_one('order')
+        for i in range(0, 100):
+            print conn.select_one('order')
 
 
-     
+
 if __name__ == '__main__':
     #test_with()
     #test5()

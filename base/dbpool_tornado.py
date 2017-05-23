@@ -1143,7 +1143,7 @@ def test_base_func():
             'username':'13512345677',
             'password':'123',
             'mobile':'13512345677',
-            'email':'123@qfpay.cn',
+            'email':'123@1111.cn',
         })
         print  conn.select('auth_user',{
             'username':'13512345677',
