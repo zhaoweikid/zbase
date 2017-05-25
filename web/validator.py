@@ -145,7 +145,7 @@ class Validator:
         return val
 
 
-    def verify(self, inputdata):
+    def verify(self, inputdata, split=True):
         result = [] # 没验证通过的字段名
 
         # check input format and transfer to {key: [op, value]}
@@ -177,8 +177,8 @@ class Validator:
                     continue
 
                 f.op = val[0]
-                v = val[1]  
-                if ',' in v: # , transfer to list
+                v = val[1]
+                if ',' in v and split: # , transfer to list
                     val = v.split(',')
                     f.value = [self._check_item(f,cv) for cv in val]
                     if not f.value:
@@ -220,12 +220,12 @@ def check_validator(fields):
     return f
 
 
-def with_validator(fields, errfunc=None):
+def with_validator(fields, errfunc=None, split=True):
     def f(func):
         def _(self, *args, **kwargs):
             vdt = Validator(fields)
             self.validator = vdt
-            ret = vdt.verify(self.req.input())
+            ret = vdt.verify(self.req.input(), split=split)
             log.debug('validator check:%s', ret)
             if ret:
                 #log.debug('err:%s', errfunc(ret))
@@ -342,8 +342,8 @@ def test4():
     from zbase.base import logger
     log = logger.install('stdout')
     from zbase.web.http import Request, Response
-    
-    class Req: 
+
+    class Req:
         def __init__(self, data):
             self.data = data
 
@@ -371,7 +371,7 @@ def test4():
     t = Test()
     t.testfunc()
     log.info('after validator: %s', t.validator.data)
-    
+
     t.testfunc2()
     log.info('after validator: %s', t.validator.data)
 

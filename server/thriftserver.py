@@ -13,7 +13,7 @@ import thrift.protocol
 
 from thrift.Thrift import TException, TMessageType
 from thrift.protocol import TBinaryProtocol
-from thrift.transport import TTransport
+from thrift.transport import TTransport, TSocket
 from thrift.server.TServer import TServer
 
 import gevent
@@ -36,7 +36,7 @@ class SocketTransport (TTransport.TTransportBase):
         return self.socket.recv(sz)
 
     def write(self, buf):
-        self.socket.send(buf)
+        self.socket.sendall(buf)
 
     def flush(self):
         pass
@@ -118,9 +118,8 @@ class GStreamServer(StreamServer):
     def __init__(self, listener, processor,
                  inputTransportFactory=None, outputTransportFactory=None,
                  inputProtocolFactory=None, outputProtocolFactory=None,
-                 backlog=None, spawn='default',  **kwargs):
-        StreamServer.__init__(self, listener=listener, handle=self._process_socket, backlog = backlog,
-                              spawn = spawn, **kwargs)
+                 **kwargs):
+        StreamServer.__init__(self, listener=listener, handle=self._process_socket,  **kwargs)
 
         self.processor = processor
         self.inputTransportFactory = inputTransportFactory
@@ -130,19 +129,24 @@ class GStreamServer(StreamServer):
 
     def _process_socket(self, client, address):
         """A greenlet for handling a single client."""
+        tstart = time.time()
 
         log.info('func=open|client=%s:%d|pool_size=%d', address[0], address[1], len(self.pool))
-        client = SocketTransport(client)
+        trans = TSocket.TSocket(address[0], address[1])
+        trans.setHandle(client)
 
-        itrans = self.inputTransportFactory.getTransport(client)
-        otrans = self.outputTransportFactory.getTransport(client)
+        itrans = self.inputTransportFactory.getTransport(trans)
+        otrans = self.outputTransportFactory.getTransport(trans)
         iprot = self.inputProtocolFactory.getProtocol(itrans)
         oprot = self.outputProtocolFactory.getProtocol(otrans)
         try:
             while True:
                 self.processor.process(iprot, oprot)
-        except TTransport.TTransportException:
-            pass
+        except TTransport.TTransportException as tx:
+            if tx.type == TTransport.TTransportException.END_OF_FILE:
+                pass
+            else:
+                log.error(traceback.format_exc())
         except EOFError:
             pass
         except:
@@ -150,7 +154,7 @@ class GStreamServer(StreamServer):
 
         itrans.close()
         otrans.close()
-        log.info('func=close|client=%s:%d', address[0], address[1])
+        log.info('func=close|client=%s:%d|time=%d', address[0], address[1], (time.time()-tstart)*1000000)
 
 
 def handle(client, addr):
@@ -173,7 +177,8 @@ def handle(client, addr):
         return s[8:8+sz]
 
     tstart = time.time()
-    trans = SocketTransport(client)
+    trans = TSocket.TSocket(addr[0], addr[1])
+    trans.setHandle(client)
     try:
         #frame_data = read_frame(trans)
         #log.debug('data:%s %s', repr(frame_data), unpack_name(frame_data))
@@ -193,8 +198,10 @@ def handle(client, addr):
         #itran.close()
         #otran.close()
     except TTransport.TTransportException as tx:
-        log.error(traceback.format_exc())
-        pass
+        if tx.type == TTransport.TTransportException.END_OF_FILE:
+            pass
+        else:
+            log.error(traceback.format_exc())
     except EOFError:
         #log.error(traceback.format_exc())
         #log.info('func=close|time=%d', addr[0], addr[1], (timt.time()-tstart)*1000)

@@ -1305,7 +1305,7 @@ def test_base_func():
             'username':'13512345677',
             'password':'123',
             'mobile':'13512345677',
-            'email':'123@haha.cn',
+            'email':'123@xxx.cn',
         })
         print  conn.select('auth_user',{
             'username':'13512345677',

@@ -175,6 +175,19 @@ class HTTPClient:
 
         return content
 
+    @timeit
+    def delete(self, url, params={}, **kwargs):
+        header = {
+            'Content-Type':'application/x-www-form-urlencoded'
+        }
+        if 'headers' in kwargs:
+            header.update(kwargs.pop('headers'))
+
+        post_data = utf8urlencode(params)
+        content, code, headers = self.request('delete', url, header, post_data, **kwargs)
+
+        return content
+
 
     def request(self, method, url, headers, post_data=None, **kwargs):
         raise NotImplementedError(
