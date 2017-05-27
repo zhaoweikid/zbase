@@ -36,7 +36,7 @@ class Session (UserDict.UserDict):
 try:
     import redis
     class SessionRedis (Session):
-        def __init__(self, sid=None, server=None, expire=3600):
+        def __init__(self, server=None, sid=None, expire=3600):
             addr = server['addr']
             self.conn = redis.Redis(host=addr[0], port=addr[1], 
                     socket_timeout=server['timeout'], db=0)
@@ -100,7 +100,7 @@ def create(classname, cfg, sid):
 
 def test1():
     cf = {'addr':('127.0.0.1', 6379), 'timeout':1000}
-    s = SessionRedis(config=cf)
+    s = SessionRedis(server=cf)
     s['name'] = 'zhaowei'
     s['time'] = time.time()
     s.save()
@@ -111,7 +111,7 @@ def test1():
     print '-'*60
     
     print 'sid:', sid
-    s2 = SessionRedis(sid, config=cf)
+    s2 = SessionRedis(server=cf, sid=sid)
     print s2
 
 
@@ -139,5 +139,5 @@ def test3():
 
 
 if __name__ == '__main__':
-    test3()
+    test1()
 
