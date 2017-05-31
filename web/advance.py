@@ -1,8 +1,8 @@
 # coding: utf-8
 # many more advanced things
-from qfcommon.web.core import Handler, HandlerFinish
-from qfcommon.web.session2 import SessionRedis
-from qfcommon.web.http import Response
+from zbase.web.core import Handler, HandlerFinish
+from zbase.web.session2 import SessionRedis
+from zbase.web.http import Response
 import json
 import logging
 
@@ -14,6 +14,7 @@ ERR = -1
 class APIHandler (Handler):
     session_conf = None
     def initial(self):
+        self.set_headers({'Content-Type': 'application/json; charset=UTF-8'})
         name = self.req.path.split('/')[-1]
         # name: _xxxx means private method, only called in LAN , 
         #       xxxx_ means not need check session
@@ -28,7 +29,7 @@ class APIHandler (Handler):
                 raise HandlerFinish
         else:
             # check session
-            sid = self.req.cookie.get('sid')
+            sid = self.get_cookie('sid')
             if not sid:
                 self.resp = Response('Session Error', 403)
                 raise HandlerFinish
@@ -40,7 +41,7 @@ class APIHandler (Handler):
         
 
     def finish(self):
-        if self.ses:
+        if self.ses and self.ses.sid:
             self.ses.save()
             self.set_cookie('sid', self.ses.sid)
 
