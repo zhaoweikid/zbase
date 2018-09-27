@@ -287,13 +287,13 @@ class WebApplication(object):
         s.append('%d' % ((times[-1]-times[-2])*1000000))
         try:
             if req.query_string:
-                s.append(req.query_string[:2048])
+                s.append(req.query_string[:1024])
             if req.method == 'POST':
-                s.append(str(req.input())[:2048])
-            if type(req.storage.value) == types.StringType:
+                s.append(str(req.input())[:1024])
+            if type(req.storage.value) == str:
                 s.append(req.storage.value)
             if resp.content and resp.headers['Content-Type'].startswith('application/json'):
-                s.append(str(resp.content)[:4096])
+                s.append(str(resp.content)[:1024])
         except:
             log.warn(traceback.format_exc())
         if not req.path.startswith(tuple(self.settings.STATICS.keys())):
