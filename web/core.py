@@ -1,7 +1,7 @@
 # coding: utf-8
 import os, sys
 import re, time, types, mimetypes
-from zbase.web import template #, reloader
+from zbase.web import template, reloader
 from zbase.base import dbpool
 from zbase.base.tools import smart_utf8
 from zbase.web.http import Request, Response, NotFound
@@ -106,23 +106,21 @@ class WebApplication(object):
         self.allowed_methods = set(('GET', 'HEAD', 'POST', 'DELETE', 'PUT', 'OPTIONS'))
         self.charset = 'utf-8'
 
-        self.urls = []
         self.settings = settings
+        self.debug = settings.DEBUG
+        self.reloader = None
+        if self.debug:
+            self.reloader = reloader.Reloader()
+            self.reloader()
         self.install()
-
-        self.add_urls(self.settings.URLS)
 
         if not self.settings.DOCUMENT_ROOT:
             self.document_root = os.getcwd()
         else:
             self.document_root = self.settings.DOCUMENT_ROOT
 
-        self.debug = settings.DEBUG
         self.charset = settings.CHARSET
 
-        #self.reloader = None
-        #if self.debug:
-        #    self.reloader = reloader.Reloader()
 
 
     def add_urls(self, urls, appname=''):
@@ -130,10 +128,12 @@ class WebApplication(object):
         for item in urls:
             if len(item) == 2:
                 if type(item[1]) == types.StringType:
-                    parts = item[1].split('.')
-                    obj   = __import__(parts[0])
-                    for p in parts[1:]:
-                        obj = getattr(obj, p)
+                    mod, cls = item[1].rsplit('.', 1)
+                    mod = __import__(mod, None, None, [''])
+                    #仅仅针对于调试用, 热更新
+                    if self.reloader:
+                        reload(mod)
+                    obj = getattr(mod, cls)
                 else:
                     obj = item[1]
 
@@ -163,8 +163,10 @@ class WebApplication(object):
         if self.settings.DATABASE:
             dbpool.install(self.settings.DATABASE)
 
+        self.urls = []
         for appname in self.settings.APPS:
             self.add_app(appname)
+        self.add_urls(self.settings.URLS)
 
     def run(self, host='0.0.0.0', port=8000):
         from gevent.wsgi import WSGIServer
@@ -189,8 +191,9 @@ class WebApplication(object):
         resp = None
         viewobj = None
         try:
-            #if self.reloader:
-            #    self.reloader()
+            if self.reloader:
+                if self.reloader():
+                    self.install()
             req = Request(environ)
             times.append(time.time())
             if req.path.startswith(tuple(self.settings.STATICS.keys())):
@@ -266,9 +269,10 @@ class WebApplication(object):
                 s.append(req.query_string[:2048])
             if req.method == 'POST':
                 s.append(str(req.input())[:2048])
-            if req.storage is not None and type(req.storage.value) == types.StringType:
-                s.append(req.storage.value)
-            if resp.content and resp.headers['Content-Type'].startswith('application/json'):
+            if not req.input() and req.data:
+                s.append(str(req.data)[:2048])
+            # if resp.content and resp.headers['Content-Type'].startswith('application/json'):
+            if resp.content and resp.content.startswith('{') and resp.content.endswith('}'):
                 s.append(str(resp.content)[:4096])
         except:
             log.warn(traceback.format_exc())

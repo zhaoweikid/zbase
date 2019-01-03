@@ -9,7 +9,7 @@ import base64
 import threading
 import datetime
 
-# msec(42b) + server_id(6b) + seq(16b) 
+# msec(42b) + server_id(6b) + seq(16b)
 # muse have a myql conn
 def new_id64(**kwargs):
     ''' kwargs: conn - a mysql connection '''
@@ -23,7 +23,7 @@ def new_id64(**kwargs):
 def unpack_id64(xid):
     ''' xid - a id create by new_id64 '''
     msec = (xid >> 22)
-    server_id = (xid >> 16) & 0xffff
+    server_id = (xid >> 16) & 0x3f
     return msec, server_id
 
 def unpack_id64_time(xid):

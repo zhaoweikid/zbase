@@ -14,6 +14,9 @@ else:
 import config
 import urls
 
+if 'QFNAME' in os.environ:
+    config.QFNAME = os.environ['QFNAME']
+
 # 导入服务日志
 if config.LOGFILE:
     log = logger.install(config.LOGFILE)

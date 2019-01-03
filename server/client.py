@@ -20,7 +20,7 @@ class ThriftClientError(Exception):
 #    return getconf.get_name_base(key)
 #etcd_cache = cache.CacheDict(load_name, 60)
 
-class ThriftClient:
+class ThriftClient(object):
     def __init__(self, server, thriftmod, timeout=0, framed=False, raise_except=False):
         '''server - 为Selector对象，或者地址{'addr':('127.0.0.1',5000),'timeout':1000}'''
         global etcd_cache
@@ -55,7 +55,7 @@ class ThriftClient:
         #try:
         self.server = self.server_selector.next()
         if not self.server:
-            restore(self.server_selector, self.thriftmod)
+            restore(self.server_selector, self.thriftmod, self.frame_transport)
 
             self.server = self.server_selector.next()
             if not self.server:
@@ -79,7 +79,7 @@ class ThriftClient:
             self.transport.open()
         except Exception, e:
             err = str(e)
-            log.error(traceback.format_exc())
+            log.info(traceback.format_exc())
             self.server['valid'] = False
 
             if self.transport:
@@ -132,7 +132,11 @@ class ThriftClient:
                     len(args), len(kwargs))
             if err:
                 s += '|err=%s' % (repr(err))
-                log.warn(s)
+                # 服务自定义的异常，打info
+                if 'thrift_spec' in dir(err):
+                    log.info(s)
+                else:
+                    log.warn(s)
             else:
                 log.info(s)
 
@@ -145,7 +149,7 @@ class ThriftClient:
             _call_log(ret, e)
             #如果是thrift自定义的异常
             if 'thrift_spec' in dir(e):
-                log.warn(traceback.format_exc())
+                log.info(traceback.format_exc())
             else:
                 log.error(traceback.format_exc())
             if self.raise_except:
@@ -177,6 +181,10 @@ def restore(selector, thriftmod, framed=False):
             client = thriftmod.Client(protocol)
             transport.open()
             client.ping()
+        # 连接类的错误，记录INFO级别的日志。 可能对端服务还没有启动/恢复
+        except TTransport.TTransportException as e:
+            log.info('restore fail. addr=%s, reason=%s', server['server']['addr'], e)
+            continue
         except:
             log.error(traceback.format_exc())
             log.debug("restore fail: %s", server['server']['addr'])
@@ -231,7 +239,7 @@ def with_http_retry(func):
                     self.server['valid'] = False
     return _
 
-class HttpClient:
+class HttpClient(object):
     def __init__(self, server, protocol='http', timeout=0, raise_except=False, log_except=True, client_class = Urllib2Client):
         self.server_selector  = None
         self.protocol = protocol
@@ -382,8 +390,35 @@ def test4():
         client = ThriftClient(server_name, PayProcessor)
         client.ping()
 
+
+def test5():
+    from zbase.thriftclient.payprocessor import PayProcessor
+    from zbase.thriftclient.spring import Spring
+    from zbase.base import logger
+    global log
+    log = logger.install('stdout')
+    log.debug('test ...')
+    
+    for i in xrange(0, 1):
+        #client = ThriftClient({'addr':('127.0.0.1',9001), 'timeout':1000}, PayProcessor, framed=True)
+        #client = ThriftClient({'addr':('172.100.101.106',7110), 'timeout':1000}, Spring, framed=True)
+        client = ThriftClient({'addr':('172.100.101.106',7110), 'timeout':1000}, Spring, framed=False)
+        log.debug('ping:%s', client.ping())
+        log.debug('getid: %d', client.getid())
+        #log.debug('getsn: %s', client.getsn(2))
+        #log.debug('getssn: %s', client.getssn())
+        #log.debug('get_userid: %d', client.get_userid())
+
+        #client.ping()
+        #client.getid()
+        #client.getsn(2)
+        #client.getssn()
+        #client.get_userid()
+
+
+
 if __name__ == '__main__':
-    test3()
+    test5()
     # test_http()
 
 

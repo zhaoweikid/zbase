@@ -439,7 +439,7 @@ websocket_server = gevent_websocket_server
 
 
 
-class RPCClient:
+class RPCClient(object):
     def __init__(self, addr, timeout=0, keyfile=None, certfile=None):
         self._addr = addr
         self._seqid = random.randint(0, 1000000)

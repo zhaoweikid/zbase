@@ -2,20 +2,27 @@
 
 import os
 import sys
-from webconfig import *
+
+HOME = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 服务地址
 HOST = '0.0.0.0'
 
 # 服务端口
-PORT = 6200
+PORT = 7200
+
+# 服务开启进程数
+PROCS = 2
 
 # 调试模式: True/False
 # 生产环境必须为False
-DEBUG = True
+DEBUG = False
 
 # 日志文件配置
-LOGFILE = 'stdout'
+if DEBUG:
+    LOGFILE = 'stdout'
+else:
+    LOGFILE = {'root': {'filename':{'DEBUG':os.path.join(HOME, "log/project.log"),'ERROR':os.path.join(HOME, 'log/project.error.log')}}} 
 
 # 数据库配置
 DATABASE = {
@@ -24,10 +31,10 @@ DATABASE = {
         'db': 'test',
         'host': '127.0.0.1',
         'port': 3306,
-        'user': 'qf',
+        'user': 'root',
         'passwd': '123456',
         'charset': 'utf8',
-        'conn': 16,
+        'conn': 10,
     },
 }
 

@@ -13,7 +13,7 @@ class JSONPMiddleware:
         return
 
     def after(self, viewobj, *args, **kwargs):
-        input = viewobj.req.input()
+        input = viewobj.req.inputjson()
         if input.get('format', '') == 'jsonp':
             if viewobj.req.method.upper() == 'GET':
                 viewobj.resp.headers['Content-Type'] = 'application/javascript; charset=UTF-8'

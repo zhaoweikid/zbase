@@ -7,7 +7,6 @@ import os
 import email
 import logging
 import types
-import urlparse
 import urllib
 import urllib2
 import httplib
@@ -32,7 +31,10 @@ def timeit(func):
         try:
             retval = func(self, *args, **kwargs)
             code = self.code
-            content = self.content
+            if '\0' in self.content:
+                content = '[binary data %d]' % len(self.content)
+            else:
+                content = self.content[:4000]
             return retval
         except Exception, e:
             err = str(e)
@@ -43,7 +45,7 @@ def timeit(func):
                      self.name,func.__name__,str(code),
                      int((endtm-starttm)*1000000),
                      str(args),str(kwargs),
-                     err,str(content)[:9000])
+                     err,content)
     return _
 
 def install(name, **kwargs):
@@ -63,6 +65,32 @@ def utf8urlencode(data):
             v.encode('utf-8') if isinstance(v, unicode) else str(v)
     return urllib.urlencode(tmp)
 
+def dict2xml(root, sep='', cdata=True, encoding='utf-8'):
+    '''sep 可以为 \n'''
+    xml = ''
+    for key in sorted(root.keys()):
+        if isinstance(key, unicode):
+            u_key = key.encode(encoding)
+        else:
+            u_key = str(key)
+        if isinstance(root[key], dict):
+            xml = '%s<%s>%s%s</%s>%s' % (xml, u_key, sep, dict2xml(root[key], sep), u_key, sep)
+        elif isinstance(root[key], list):
+            xml = '%s<%s>' % (xml, u_key)
+            for item in root[key]:
+                xml = '%s%s' % (xml, dict2xml(item,sep))
+            xml = '%s</%s>' % (xml, u_key)
+        else:
+            value = root[key]
+            if isinstance(value, unicode):
+                value = value.encode(encoding)
+
+            if cdata:
+                xml = '%s<%s><![CDATA[%s]]></%s>%s' % (xml, u_key, value, u_key, sep)
+            else:
+                xml = '%s<%s>%s</%s>%s' % (xml, u_key, value, u_key, sep)
+    return xml
+
 
 class HTTPClient:
     code = 0
@@ -78,7 +106,11 @@ class HTTPClient:
     @timeit
     def get(self, url, params={}, **kwargs):
         if params:
-            url = url + '?' + utf8urlencode(params)
+            if '?' in url:
+                url = url + '&' + utf8urlencode(params)
+            else:
+                url = url + '?' + utf8urlencode(params)
+
         header = {}
         if 'headers' in kwargs:
             header.update(kwargs.pop('headers'))
@@ -131,35 +163,14 @@ class HTTPClient:
         if isinstance(post_data, unicode):
             post_data = post_data.encode('utf-8')
 
+        log.debug('post_data=%s', post_data)
+
         content, code, headers = self.request('post', url, header, post_data, **kwargs)
 
         return content
 
     @timeit
     def post_xml(self, url, xml={}, **kwargs):
-        #------dict2xml---------
-        def serialize(root, sep=''):
-            '''sep 可以为 \n'''
-            xml = ''
-            for key in root.keys():
-                if type(key) == types.StringType:
-                    u_key = key.decode('utf-8')
-                else:
-                    u_key = unicode(key)
-                if isinstance(root[key], dict):
-                    xml = '%s<%s>%s%s</%s>%s' % (xml, u_key, sep, serialize(root[key], sep), u_key, sep)
-                elif isinstance(root[key], list):
-                    xml = '%s<%s>' % (xml, u_key)
-                    for item in root[key]:
-                        xml = '%s%s' % (xml, serialize(item,sep))
-                    xml = '%s</%s>' % (xml, u_key)
-                else:
-                    value = root[key]
-                    if isinstance(value, str):
-                        value = value.decode('utf-8')
-                    xml = '%s<%s><![CDATA[%s]]></%s>%s' % (xml, u_key, value, u_key, sep)
-            return xml
-        #-------------------------
 
         header = {
             'Content-Type':'application/xml',
@@ -168,9 +179,12 @@ class HTTPClient:
             header.update(kwargs.pop('headers'))
 
         if isinstance(xml, dict):
-            xml = serialize(xml)
+            xml = dict2xml(xml)
         if isinstance(xml, unicode):
             xml = xml.encode('utf-8')
+
+        log.debug('post_data=%s', xml)
+
         content, code, headers = self.request('post', url, header, xml, **kwargs)
 
         return content
@@ -198,10 +212,10 @@ class Urllib3Client(HTTPClient):
 
     def request(self, method, url, headers, post_data=None,  **kwargs):
         import urllib3
+        from urllib3.util.retry import Retry
         urllib3.disable_warnings()
 
-        # 连接错误重试三次
-        retry = urllib3.util.Retry(total=3, connect=3, read=0, redirect=0)
+        retries = Retry(total=False, connect=None, read=None, redirect=None)
 
         pool_kwargs = {}
         if self._verify_ssl_certs:
@@ -218,13 +232,12 @@ class Urllib3Client(HTTPClient):
         if self._conn_pool:
             global conn_pool
             if not conn_pool:
-                conn_pool = urllib3.PoolManager(num_pools=20, maxsize=max(50, self._conn_pool), **pool_kwargs)
+                conn_pool = urllib3.PoolManager(num_pools=max(100, self._conn_pool), maxsize=max(100, self._conn_pool), **pool_kwargs)
             conn = conn_pool
         else:
-            conn = urllib3.connection_from_url(url)
-            url = urlparse.urlparse(url).path
+            conn = urllib3.PoolManager(**pool_kwargs)
 
-        result = conn.request(method=method, url=url, body=post_data, headers=headers, timeout=self._timeout, retries=retry, **kwargs)
+        result = conn.request(method=method, url=url, body=post_data, headers=headers, timeout=self._timeout, retries=retries, **kwargs)
 
         self.content, self.code, self.headers = result.data, result.status, result.headers
 
@@ -232,6 +245,20 @@ class Urllib3Client(HTTPClient):
 
 class RequestsClient(HTTPClient):
     name = 'requests'
+
+    @timeit
+    def post_file(self, url, data={}, files={}, **kwargs):
+        '''
+        requests发文件方便一些  就不实现协议报文了
+        '''
+        header = {
+        }
+        if 'headers' in kwargs:
+            header.update(kwargs.pop('headers'))
+
+        content, code, headers = self.request('post', url, header, post_data=data, files=files, **kwargs)
+
+        return content
 
     def request(self, method, url, headers, post_data=None,  **kwargs):
 
@@ -356,16 +383,20 @@ class Urllib2Client(HTTPClient):
 
     def request(self, method, url, headers, post_data=None, handlers=[], **kwargs):
         import urllib2
+        import ssl
 
         req = urllib2.Request(url, post_data, headers)
 
         if method not in ('get', 'post'):
             req.get_method = lambda: method.upper()
         try:
-            opener = urllib2.build_opener(*handlers)
-            response = opener.open(req,timeout=self._timeout, **kwargs)
-
-            log.info('response from %s', response.fp._sock.fp._sock.getpeername())
+            if not self._verify_ssl_certs and hasattr(ssl, 'SSLContext'):
+                # python 2.7.9 之前没有完善的ssl支持 开启验证也不会验证
+                # 这里 verify_ssl_certs=False 仅用于调试
+                response = urllib2.urlopen(req, timeout=self._timeout, context=ssl._create_unverified_context(), **kwargs)
+            else:
+                opener = urllib2.build_opener(*handlers)
+                response = opener.open(req,timeout=self._timeout, **kwargs)
 
             rbody = response.read()
             rcode = response.code
@@ -427,6 +458,12 @@ def test_post_json():
     Urllib2Client().post_json('http://baidu.com',{'a':'1'})
     Urllib3Client().post_json('http://baidu.com',{'a':'1'})
 
+def test_post_xml():
+    PycurlClient().post_xml('http://baidu.com',{'a':'1'})
+    RequestsClient().post_xml('http://baidu.com',{'a':'1'})
+    Urllib2Client().post_xml('http://baidu.com',{'a':'1'})
+    Urllib3Client().post_xml('http://baidu.com',{'a':'1'})
+
 def test_install():
     c = install('urllib2')
     c.get('http://baidu.com')
@@ -459,16 +496,30 @@ def test_urlencode():
     }
     print utf8urlencode(b)
 
+def test_binary():
+    Urllib2Client().get('https://www.baidu.com/img/bd_logo1.png')
+    Urllib2Client().get('http://baidu.com')
+
+def test_post_file():
+    RequestsClient().post_file('http://httpbin.org/post', {'key1':'value1'}, files={'file1': open('__init__.py', 'rb')})
+
+def test_urllib3():
+    Urllib3Client().post_xml('http://127.0.0.1:9020/a/b/c',{'a':'1'})
+    Urllib3Client(conn_pool=True).post_xml('http://127.0.0.1:9020/a/b/c',{'a':'1'})
 
 if __name__ == '__main__':
     import logger
     logger.install('stdout')
 
-    test_get()
+    # test_get()
     # test_post()
     # test_post_json()
+    # test_post_xml()
     # test_install()
     # test_long_conn()
     # test_headers()
     # test_urlencode()
+    # test_binary()
+    # test_post_file()
+    test_urllib3()
 

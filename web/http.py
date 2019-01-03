@@ -1,9 +1,5 @@
 # coding: utf-8
-try:
-    import cgiutils
-except:
-    import cgi as cgiutils
-
+import cgi
 import json
 import urllib
 import logging
@@ -12,6 +8,11 @@ import httplib
 import types
 import datetime
 from Cookie import SimpleCookie
+import traceback
+try:
+    from cStringIO import StringIO
+except ImportError:
+    import StringIO
 
 log = logging.getLogger()
 
@@ -39,9 +40,16 @@ class Request(object):
         self.host    = environ.get('HTTP_HOST', '')
         self.cookie  = {}
         self.query_string = environ.get('QUERY_STRING', '')
+        self.length  = int(environ.get('CONTENT_LENGTH') or '0')
+        if self.length:
+            self.data = environ['wsgi.input'].read(self.length)
+        else:
+            self.data = ''
+
         self._parse_cookie()
+
         if self.method != 'OPTIONS':
-            self.storage = cgiutils.FieldStorage(fp=environ.get('wsgi.input', None), environ=safe_environ, keep_blank_values=True)
+            self.storage = cgi.FieldStorage(fp=StringIO(self.data), environ=safe_environ, keep_blank_values=True)
         else:
             self.storage = None
 
@@ -99,10 +107,7 @@ class Request(object):
         return self._input
 
     def postdata(self):
-        if self.storage is None:
-            return ''
-
-        return self.storage.value
+        return self.data
 
     def inputjson(self):
         data = self.input()
@@ -193,10 +198,50 @@ class Response(object):
         return [self.content]
 
 
+class ChunkedResponse(Response):
+    """生成器方式返回数据的 response, 用来实现 chunked 方式下载.
+    由于大部分框架 (gunicorn, uwsgi) 都处理了 chunked 编码, 因此无需重复实现.
+    响应数据必须通过调用 callback() 返回, 直接调用 write() 会忽略掉.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ChunkedResponse, self).__init__(*args, **kwargs)
+        self._callback = lambda: []
+
+    def write(self, *args, **kwargs):
+        pass
+
+    def set_callback(self, cb):
+        # cb() 应该返回一个 iterable.
+        self._callback = cb
+
+    def __call__(self, environ, start_response):
+        try:
+            statusstr = '%d %s' % (self.status, HTTP_STATUS_CODES.get(self.status, ''))
+
+            headers = self.headers.items()
+            # add cookie
+            if self.cookies:
+                for c in self.cookies.values():
+                    headers.append(('Set-Cookie', c.OutputString()))
+
+            start_response(statusstr, headers)
+
+            for chunk in self._callback():
+                yield chunk
+        except Exception:
+            log.warn(traceback.format_exc())
+
+
 def NotFound(s=None):
     if not s:
         return Response(HTTP_STATUS_CODES[404], 404)
     return Response(s, 404)
+
+def EmptyGif():
+    resp = Response(HTTP_STATUS_CODES[200], 200, 'image/gif')
+    resp.write('GIF89a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x01\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02L\x01\x00;')
+    return resp
 
 def MethodNotAllowed():
     return Response(HTTP_STATUS_CODES[405], 405)

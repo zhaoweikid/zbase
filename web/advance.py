@@ -11,16 +11,6 @@ log = logging.getLogger()
 OK  = 0
 ERR = -1
 
-
-def json_default_trans(obj):
-    '''json对处理不了的格式的处理方法'''
-    if isinstance(obj, datetime.datetime):
-        return obj.strftime('%Y-%m-%d %H:%M:%S')
-    if isinstance(obj, datetime.date):
-        return obj.strftime('%Y-%m-%d')
-    raise TypeError('%r is not JSON serializable' % obj)
-
-
 class APIHandler (Handler):
     session_conf = None
     def initial(self):
@@ -57,18 +47,16 @@ class APIHandler (Handler):
 
 
     def succ(self, data=None):
-        obj = {'ret':OK, 'err':''}
+        obj = {'ret':OK}
         if data:
             obj['data'] = data
-        s = json.dumps(obj, separators=(',', ':'), default=json_default_trans)
+        s = json.dumps(obj, separators=(',', ':'))
         log.info('succ: %s', s)
         self.write(s)
 
-    def fail(self, errstr=u'internal error', debugstr=''):
+    def fail(self, errstr=u'internal error'):
         obj = {'ret':ERR, 'err':errstr}
-	    if debugstr:
-            obj['debug'] = debugstr
-        s = json.dumps(obj, separators=(',', ':'), default=json_default_trans)
+        s = json.dumps(obj, separators=(',', ':'))
         log.info('fail: %s', s)
         self.write(s)
 

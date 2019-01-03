@@ -5,6 +5,7 @@ import types
 import logging
 import logging.config
 from logging import DEBUG, INFO, WARN, ERROR, FATAL, NOTSET
+from zbase import conf
 
 LEVEL_COLOR = {
     DEBUG: '\33[2;39m',
@@ -147,6 +148,28 @@ def install(logdict, **options):
     global log
     log = logobj
     return logobj
+
+
+def enable_sentry_handler(sentry_dsn,
+                          logger_name=None, logger_level=logging.WARN,
+                          auto_log_stacks=True, capture_locals=True, tags=None):
+    from raven.handlers.logging import SentryHandler
+    from raven import Client
+
+    sentry_conf = conf.SENTRY_CONF
+    if logger_level is None:
+        logger_level = sentry_conf['logger_level']
+    if auto_log_stacks is None:
+        auto_log_stacks = sentry_conf['auto_log_stacks']
+
+    client = Client(sentry_dsn, auto_log_stacks=auto_log_stacks, capture_locals=capture_locals)
+    sentry_handler = SentryHandler(client, tags=tags)
+    sentry_handler.setLevel(logger_level)
+
+    logger = logging.getLogger(logger_name)
+    logger.addHandler(sentry_handler)
+
+    return sentry_handler
 
 def test6():
     install({

@@ -36,19 +36,21 @@ def timeit(func):
             conn = args[0]
             #dbcf = conn.pool.dbcf
             dbcf = conn.param
-            log.info('server=%s|name=%s|user=%s|addr=%s:%d|db=%s|idle=%d|busy=%d|max=%d|time=%d|ret=%s|num=%d|sql=%s|err=%s',
-                     conn.type, conn.name, dbcf.get('user',''),
+            log.info('server=%s|id=%d|name=%s|user=%s|addr=%s:%d|db=%s|idle=%d|busy=%d|max=%d|trans=%d|time=%d|ret=%s|num=%d|sql=%s|err=%s',
+                     conn.type, conn.conn_id%10000,
+                     conn.name, dbcf.get('user',''),
                      dbcf.get('host',''), dbcf.get('port',0),
-                     os.path.basename(dbcf.get('db','')),
+                     dbcf.get('db',''), 
                      len(conn.pool.dbconn_idle),
                      len(conn.pool.dbconn_using),
-                     conn.pool.max_conn,
+                     conn.pool.max_conn, conn.trans, 
                      int((endtm-starttm)*1000000),
-                     str(ret), num, repr(args[1]), err)
+                     str(ret), num,
+                     repr(args[1]), err)
     return _
 
 
-class DBPoolBase:
+class DBPoolBase(object):
     def acquire(self, name):
         pass
 
@@ -56,7 +58,7 @@ class DBPoolBase:
         pass
 
 
-class DBResult:
+class DBResult(object):
     def __init__(self, fields, data):
         self.fields = fields
         self.data = data
@@ -79,20 +81,23 @@ class DBResult:
     def __getitem__(self, i):
         return dict(zip(self.fields, self.data[i]))
 
-class DBFunc:
+class DBFunc(object):
     def __init__(self, data):
         self.value = data
 
 
-class DBConnection:
+class DBConnection(object):
     def __init__(self, param, lasttime, status):
-        self.name       = None
+        self.name       = param.get('name') 
         self.param      = param
         self.conn       = None
         self.status     = status
         self.lasttime   = lasttime
         self.pool       = None
         self.server_id  = None
+        self.conn_id    = 0
+        self.trans      = 0 # is start transaction
+        self.role       = param.get('role', 'm') # master/slave
 
     def __str__(self):
         return '<%s %s:%d %s@%s>' % (self.type,
@@ -240,6 +245,7 @@ class DBConnection:
 
     def dict2insert(self, d):
         keys = d.keys()
+        keys.sort()
         vals = []
         for k in keys:
             vals.append('%s' % self.value2sql(d[k]))
@@ -357,12 +363,15 @@ class DBConnection:
         pass
 
     def start(self): # start transaction
+        self.trans = 1
         pass
 
     def commit(self):
+        self.trans = 0
         self.conn.commit()
 
     def rollback(self):
+        self.trans = 0
         self.conn.rollback()
 
     def escape(self, s):
@@ -404,21 +413,24 @@ def with_mysql_reconnect(func):
             try:
                 x = func(self, *args, **argitems)
             except m.OperationalError, e:
-                log.warning(traceback.format_exc())
-                if e[0] >= 2000: # 客户端错误
+                if e[0] >= 2000 and self.trans == 0: # 客户端错误
+                    log.info(traceback.format_exc())
                     close_mysql_conn(self)
                     self.connect()
                     trycount -= 1
                     if trycount > 0:
                         continue
-                raise
-            except m.InterfaceError, e:
+
                 log.warning(traceback.format_exc())
-                close_mysql_conn(self)
-                self.connect()
-                trycount -= 1
-                if trycount > 0:
-                    continue
+                raise
+            except (m.InterfaceError, m.InternalError):
+                log.warning(traceback.format_exc())
+                if self.trans == 0:
+                    close_mysql_conn(self)
+                    self.connect()
+                    trycount -= 1
+                    if trycount > 0:
+                        continue
                 raise
             else:
                 return x
@@ -485,20 +497,34 @@ class MySQLConnection (DBConnection):
             cur.execute("show variables like 'server_id'")
             row = cur.fetchone()
             self.server_id = int(row[1])
+            cur.close()
+
+            cur = self.conn.cursor()
+            cur.execute("select connection_id()")
+            row = cur.fetchone()
+            self.conn_id = row[0]
+            cur.close()
+
+
             #if self.param.get('autocommit',None):
             #    log.note('set autocommit')
             #    self.conn.autocommit(1)
-            #initsqls = self.param.get('init_command')
-            #if initsqls:
-            #    log.note('init sqls:', initsqls)
-            #    cur = self.conn.cursor()
-            #    cur.execute(initsqls)
-            #    cur.close()
+            initsql = self.param.get('initsql')
+            if initsql:
+                log.note('init sql:', initsql)
+                cur = self.conn.cursor()
+                cur.execute(initsql)
+                cur.close()
         else:
             raise ValueError, 'engine error:' + engine
-        #log.note('mysql connected', self.conn)
-
+        log.info('server=%s|func=connect|id=%d|name=%s|user=%s|role=%s|addr=%s:%d|db=%s', 
+                    self.type, self.conn_id%10000,
+                    self.name, self.param.get('user',''), self.role, 
+                    self.param.get('host',''), self.param.get('port',0),
+                    self.param.get('db',''))
+ 
     def close(self):
+        log.info('server=%s|func=close|id=%d', self.type, self.conn_id%10000)
         self.conn.close()
         self.conn = None
 
@@ -537,14 +563,17 @@ class MySQLConnection (DBConnection):
         return ret[0][0]
 
     def start(self):
+        self.trans = 1
         sql = "start transaction"
         return self.execute(sql)
 
     def commit(self):
+        self.trans = 0
         sql = 'commit'
         return self.execute(sql)
 
     def rollback(self):
+        self.trans = 0
         sql = 'rollback'
         return self.execute(sql)
 
@@ -566,14 +595,28 @@ class PyMySQLConnection (MySQLConnection):
                                         connect_timeout = self.param.get('timeout', 10),
                                         )
             self.conn.autocommit(1)
+            self.trans = 0
 
             cur = self.conn.cursor()
             cur.execute("show variables like 'server_id'")
             row = cur.fetchone()
             self.server_id = int(row[1])
+            cur.close()
+
+            cur = self.conn.cursor()
+            cur.execute("select connection_id()")
+            row = cur.fetchone()
+            self.conn_id = row[0]
+            cur.close()
+
         else:
             raise ValueError, 'engine error:' + engine
-
+        log.info('server=%s|func=connect|id=%d|name=%s|user=%s|role=%s|addr=%s:%d|db=%s', 
+                    self.type, self.conn_id%10000,
+                    self.name, self.param.get('user',''), self.role,
+                    self.param.get('host',''), self.param.get('port',0),
+                    self.param.get('db',''))
+ 
 class SQLiteConnection (DBConnection):
     type = "sqlite"
     def __init__(self, param, lasttime, status):
@@ -581,6 +624,7 @@ class SQLiteConnection (DBConnection):
 
     def connect(self):
         engine = self.param['engine']
+        self.trans = 0
         if engine == 'sqlite':
             import sqlite3
             self.conn = sqlite3.connect(self.param['db'], detect_types=sqlite3.PARSE_DECLTYPES, isolation_level=None)
@@ -607,6 +651,7 @@ class SQLiteConnection (DBConnection):
         return ret[0][0]
 
     def start(self):
+        self.trans = 1
         sql = "BEGIN"
         return self.conn.execute(sql)
 
@@ -628,7 +673,7 @@ class DBPool (DBPoolBase):
         self.connection_class = {}
         x = globals()
         for v in x.itervalues():
-            if type(v) == types.ClassType and v != DBConnection and issubclass(v, DBConnection):
+            if type(v) == types.TypeType and v != DBConnection and issubclass(v, DBConnection):
                 self.connection_class[v.type] = v
 
         self.lock = threading.Lock()
@@ -701,9 +746,12 @@ class DBPool (DBPoolBase):
 
     @synchronize
     def release(self, conn):
-        # conn是有效的
-        # FIXME: conn有可能为false吗？这样是否会有conn从dbconn_using里出不来了
         if conn:
+            if conn.trans:
+                log.debug('realse close conn use transaction')
+                conn.close()
+                #conn.connect()
+
             self.dbconn_using.remove(conn)
             conn.releaseit()
             if conn.conn:
@@ -720,7 +768,7 @@ class DBPool (DBPoolBase):
         return len(self.dbconn_idle), len(self.dbconn_using)
 
 
-class DBConnProxy:
+class DBConnProxy(object):
     #def __init__(self, masterconn, slaveconn):
     def __init__(self, pool, timeout=10):
         #self.name   = ''
@@ -757,18 +805,26 @@ class DBConnProxy:
             return getattr(self._slave, name)
 
 
-class RWDBPool:
+class RWDBPool(object):
     def __init__(self, dbcf):
         self.dbcf   = dbcf
         self.name   = ''
         self.policy = dbcf.get('policy', 'round_robin')
-        self.master = DBPool(dbcf.get('master', None))
+
+        master_cf = dbcf.get('master', None)
+        master_cf['name'] = dbcf.get('name', '')
+        master_cf['role'] = 'm'
+        self.master = DBPool(master_cf)
+
         self.slaves = []
 
         self._slave_current = -1
 
         for x in dbcf.get('slave', []):
-            self.slaves.append(DBPool(x))
+            x['name'] = dbcf.get('name', '')
+            x['role'] = 's'
+            slave = DBPool(x)
+            self.slaves.append(slave)
 
     def get_slave(self):
         if self.policy == 'round_robin':
@@ -842,7 +898,7 @@ def install(cf):
     dbpool = {}
 
     for name,item in cf.iteritems():
-        #item = cf[name]
+        item['name']  = name
         dbp = None
         if item.has_key('master'):
             dbp = RWDBPool(item)
@@ -879,17 +935,20 @@ def query(db, sql, param=None, isdict=True, head=False):
 
 @contextmanager
 def get_connection(token):
+    conn = None
     try:
         conn = acquire(token)
         yield conn
     except:
         log.error("error=%s", traceback.format_exc())
     finally:
-        release(conn)
+        if conn:
+            release(conn)
 
 @contextmanager
 def get_connection_exception(token):
     '''出现异常捕获后，关闭连接并抛出异常'''
+    conn = None
     try:
         conn = acquire(token)
         yield conn
@@ -897,7 +956,8 @@ def get_connection_exception(token):
         #log.error("error=%s", traceback.format_exc())
         raise
     finally:
-        release(conn)
+        if conn:
+            release(conn)
 
 
 def with_database(name, errfunc=None, errstr=''):
@@ -1305,7 +1365,7 @@ def test_base_func():
             'username':'13512345677',
             'password':'123',
             'mobile':'13512345677',
-            'email':'123@xxx.cn',
+            'email':'123@test.cn',
         })
         print  conn.select('auth_user',{
             'username':'13512345677',
@@ -1324,31 +1384,31 @@ def test_new_rw():
                 'policy': 'round_robin',
                 'default_conn':'auto',
                 'master':
-                    {'engine':'mysql',
+                    {'engine':'pymysql',
                      'db':'test',
-                     'host':'127.0.0.1',
+                     'host':'172.100.101.156',
                      'port':3306,
-                     'user':'root',
-                     'passwd':'654321',
+                     'user':'qf',
+                     'passwd':'123456',
                      'charset':'utf8',
                      'conn':10}
                  ,
                  'slave':[
-                    {'engine':'mysql',
+                    {'engine':'pymysql',
                      'db':'test',
-                     'host':'127.0.0.1',
+                     'host':'172.100.101.156',
                      'port':3306,
-                     'user':'root',
-                     'passwd':'654321',
+                     'user':'qf',
+                     'passwd':'123456',
                      'charset':'utf8',
                      'conn':10
                     },
-                    {'engine':'mysql',
+                    {'engine':'pymysql',
                      'db':'test',
-                     'host':'127.0.0.1',
+                     'host':'172.100.101.156',
                      'port':3306,
-                     'user':'root',
-                     'passwd':'654321',
+                     'user':'qf',
+                     'passwd':'123456',
                      'charset':'utf8',
                      'conn':10
                     }
@@ -1430,6 +1490,35 @@ def test_db_install():
         for i in range(0, 100):
             print conn.select_one('order')
 
+def test_trans():
+    import logger
+    logger.install('stdout')
+    DATABASE = {'test': # connection name, used for getting connection from pool
+                {'engine':'pymysql',   # db type, eg: mysql, sqlite
+                 'db':'qiantai',        # db name
+                 'host':'172.100.101.156', # db host
+                 'port':3306,        # db port
+                 'user':'qf',      # db user
+                 'passwd':'123456',  # db password
+                 'charset':'utf8',   # db charset
+                 'conn':10}          # db connections in pool
+           }
+
+    install(DATABASE)
+
+    with get_connection('test') as conn:
+        conn.start()
+        conn.select_one('order')
+        conn.get('select connection_id()')
+
+        conn.select_one('order')
+
+    with get_connection('test') as conn:
+        conn.select_one('order')
+        conn.get('select connection_id()')
+
+
+
 
 
 if __name__ == '__main__':
@@ -1442,7 +1531,8 @@ if __name__ == '__main__':
     #test()
     #test_base_func()
     #test_new_rw()
-    test_db_install()
+    #test_db_install()
+    test_trans()
     print 'complete!'
 
 

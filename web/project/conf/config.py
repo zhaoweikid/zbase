@@ -20,7 +20,7 @@ LOGFILE = os.path.join(HOME, '../log/project.log')
 # 数据库配置
 DATABASE = {
     'test': {
-        'engine':'mysql',
+        'engine':'pymysql',
         'db': 'test',
         'host': '127.0.0.1',
         'port': 3306,

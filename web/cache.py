@@ -158,7 +158,16 @@ class CacheDict (UserDict.UserDict):
         info = self._cache_info.get(key)
         now = time.time()
         if not data or not info or now-info['last'] >= self._timeout:
-            data = self._update_func(key, data)
+            func = self._update_func
+            if isinstance(self._update_func, dict):
+                func = self._update_func[key]
+                
+            # 兼容性,之前没有最后一个参数
+            if func.func_code.co_argcount == 2:
+                data = func(key, data)
+            else:
+                data = func(key, data, info)
+
             self._cache_info[key] = {'last':now}
             self.data[key] = data
         return data
@@ -262,8 +271,7 @@ def test4():
 
 
 def test5():
-    
-    def func(key, data):
+    def func(key, data, info):
         print 'key:', key, 'data:', data
         return 'name-%.3f' % time.time()
 
@@ -272,8 +280,27 @@ def test5():
         print c['name']
         time.sleep(.2)
 
+
+def test6():
+    def func(key, data, info):
+        #print 'func key:', key, 'data:', data
+        return 'name-%.3f' % time.time()
+
+    def func2(key, data, info):
+        #print 'func2 key:', key, 'data:', data
+        return 'count-%.3f' % time.time()
+
+    c = CacheDict({'name':func, 'count':func2}, 0.5)
+    for i in range(0, 10):
+        print c['name']
+        print c['count']
+        time.sleep(.2)
+
+
+
+
 if __name__ == '__main__':
-    test5()
+    test6()
 
 
 

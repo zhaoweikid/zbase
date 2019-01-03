@@ -168,7 +168,7 @@ class Validator:
         for f in self._fields:
             try:
                 val = _input.get(f.name)
-                if not val: # field defined not exist
+                if not val or not val[1]: # field defined not exist
                     if not f.isnull: # null is not allowed, error
                         result.append(f.name)
                     else:

@@ -18,6 +18,8 @@ from thrift.server.TServer import TServer
 
 import gevent
 from gevent.server import StreamServer
+from gevent.pool import Pool
+
 
 log = logging.getLogger()
 service = None
@@ -41,66 +43,8 @@ class SocketTransport (TTransport.TTransportBase):
     def flush(self):
         pass
 
-class GTServer(TServer):
-    """
-    建议不再使用，使用start_gstream
-    Gevent socket server based on TServer
-    used must after gevent monkey patch
-    @yushijun
 
-        handler   = TestHandler()
-        processor = Processor(handler)
-        transport = TSocket.TServerSocket(host='0.0.0.0', port=8000)
-        tfactory  = TTransport.TBufferedTransportFactory()
-        pfactory  = TBinaryProtocol.TBinaryProtocolFactory()
-
-        server = GTServer(processor, transport, tfactory, pfactory)
-        server.serve()
-    """
-
-    def __init__(self, *args):
-        TServer.__init__(self, *args)
-        self._stop_flag = False
-
-    def stop(self):
-        '''stop the server'''
-        self._stop_flag = True
-        self.serverTransport.close()
-        log.debug("server going to stop")
-
-    def serve(self):
-        self.serverTransport.listen()
-        while not self._stop_flag:
-            try:
-                client = self.serverTransport.accept()
-                gevent.spawn(self._process_socket, client)
-            except KeyboardInterrupt:
-                log.debug('KeyboardInterrupt')
-                self.stop()
-            except:
-                log.error(traceback.format_exc())
-
-        # wait all greenlet
-        gevent.wait()
-
-    def _process_socket(self, client):
-        """A greenlet for handling a single client."""
-        itrans = self.inputTransportFactory.getTransport(client)
-        otrans = self.outputTransportFactory.getTransport(client)
-        iprot = self.inputProtocolFactory.getProtocol(itrans)
-        oprot = self.outputProtocolFactory.getProtocol(otrans)
-        try:
-            while True:
-                self.processor.process(iprot, oprot)
-        except TTransport.TTransportException:
-            pass
-        except:
-            log.error(traceback.format_exc())
-
-        itrans.close()
-        otrans.close()
-
-
+'''废弃中，不推荐再使用。请用ThriftServer'''
 class GStreamServer(StreamServer):
     """
     thrift server based on gevent StreamServer
@@ -157,7 +101,7 @@ class GStreamServer(StreamServer):
         log.info('func=close|client=%s:%d|time=%d', address[0], address[1], (time.time()-tstart)*1000000)
 
 
-def handle(client, addr):
+def handle(client, addr, framed=True):
     fd = client.fileno()
     log.info('func=open|client=%s:%d', addr[0], addr[1])
     global service
@@ -184,8 +128,12 @@ def handle(client, addr):
         #log.debug('data:%s %s', repr(frame_data), unpack_name(frame_data))
         #itran = TTransport.TMemoryBuffer(frame_data)
 
-        itran = TTransport.TFramedTransport(trans)
-        otran = TTransport.TFramedTransport(trans)
+        if framed:
+            itran = TTransport.TFramedTransport(trans)
+            otran = TTransport.TFramedTransport(trans)
+        else:
+            itran = TTransport.TBufferedTransport(trans)
+            otran = TTransport.TBufferedTransport(trans)
         iprot = TBinaryProtocol.TBinaryProtocol(itran, False, True)
         oprot = TBinaryProtocol.TBinaryProtocol(otran, False, True)
 
@@ -212,6 +160,7 @@ def handle(client, addr):
         log.info('func=close|time=%d', (time.time()-tstart)*1000000)
         client.close()
 
+'''废弃中，不推荐再使用。请用ThriftServer'''
 def start_gstream(module, handler_class, addr, max_conn=1000, framed=False, max_process = 1, stop_callback = None):
     global service
 
@@ -260,6 +209,8 @@ def start_gstream(module, handler_class, addr, max_conn=1000, framed=False, max_
 
 
 #def start_gevent(module, handler_class, addr, proc_process, max_conn=1000, max_process=1):
+
+'''废弃中，不推荐再使用。请用ThriftServer'''
 def start_gevent(module, handler_class, my_process, addr, max_conn=1000, max_process=1):
     from gevent.pool import Pool
     from gevent.server import StreamServer
@@ -303,62 +254,198 @@ def start_gevent(module, handler_class, my_process, addr, max_conn=1000, max_pro
     )
 
 
-def start_threadpool(module, handler_class, addr, max_thread=1, max_proc=1):
-    import threadpool, multiprocessing, threading
-    from threadpool import ThreadPool, Task
-    import socket
 
-    module.handler = handler_class()
-    global service
-    service = module
+class ThriftServer:
+    def __init__(self, module, handler_class, addr, max_process=1, max_conn=1000):
+        module.handler = handler_class()
+        global service
+        service = module
+
+        self.proc = None
+        self.workers = []
+        self.running = True
+
+        pool = Pool(max_conn)
+
+        self.server = StreamServer(addr, handle, spawn=pool)
+        self.server.reuse_addr = 1
+        self.server.start()
+
+        def signal_master_handler(signum, frame):
+            log.warn("signal %d catched in master %d, wait for kill all worker", signum, os.getpid())
+            self.running = False
+            for p in self.workers:
+                p.terminate()
+        
+        def signal_worker_handler(signum, frame):
+            log.warn("worker %d will exit after all request handled", os.getpid())
+            self.server.close()
+
+        def server_start():
+            signal.signal(signal.SIGTERM, signal_worker_handler)
+            log.warn('server started addr=%s:%d pid=%d', addr[0], addr[1], os.getpid())
+            if hasattr(service.handler, '_initial'):
+                service.handler._initial()
+            self.server.serve_forever()
+
+        def _start_process(index):
+            server_name = 'proc-%02d' % index
+            p = multiprocessing.Process(target=server_start, name=server_name)
+            p.start()
+            return p
+        
+        def signal_child_handler(signum, frame):
+            time.sleep(1)
+            if self.running:
+                log.warn("master recv worker exit, fork one")
+                try:
+                    pinfo = os.waitpid(-1, 0)
+                    pid = pinfo[0]
+
+                    index = -1
+                    for i in range(0, len(self.workers)):
+                        p = self.workers[i]
+                        if p.pid == pid:
+                            index = i
+                            break
+                   
+                    if index >= 0:
+                        self.workers[index] = _start_process(index)
+                except OSError:
+                    log.info('waitpid error:')
 
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-    sock.bind(addr)
-    sock.listen(1024)
+       
+        if max_process == 1:
+            signal.signal(signal.SIGTERM, signal_worker_handler)
+            gevent.spawn(self.forever)
+            server_start()
+        else:
+            for i in range(0, max_process):
+                self.workers.append(_start_process(i))
+
+            signal.signal(signal.SIGTERM, signal_master_handler)
+            signal.signal(signal.SIGCHLD, signal_child_handler)
+
+    def forever(self, report=None):
+        try:
+            while self.running:
+                if len(self.workers) > 0:
+                    time.sleep(60)
+                else:
+                    gevent.sleep(60)
+                if report:
+                    report()
+            log.warn('master exit')
+        except Exception, e:
+            log.warn(traceback.format_exc())
+            log.warn('master exception: %s', str(e))
+        finally:
+            self.running = False
+            time.sleep(3)
+            for p in self.workers:
+                p.terminate()
+
+    def stop(self):
+        pass
 
 
-    def thread_run():
-        # do_trans_all_logger()
+from threadpool import ThreadPool, Task
 
-        def run(obj, client, addr):
-            return handle(client, addr)
+class ThriftThreadServer:
+    def __init__(self, module, handler_class, addr, max_process=1, max_conn=50, framed=True):
+        module.handler = handler_class()
+        global service
+        service = module
+        self.framed = framed
 
-        t = ThreadPool(max_thread)
-        t.start()
+        self.workers = []
+        self.running = True
 
-        while True:
+        def signal_master_handler(signum, frame):
+            log.warn("signal %d catched in master %d, wait for kill all worker", signum, os.getpid())
+            self.running = False
+            for p in self.workers:
+                p.terminate()
+        
+        def signal_worker_handler(signum, frame):
+            log.warn("worker %d will exit after all request handled", os.getpid())
+            #self.server.close()
+            self.running = False
+            self.sock.close()
+
+        def server_init():
+            signal.signal(signal.SIGTERM, signal_worker_handler)
+            log.warn('server started addr=%s:%d pid=%d', addr[0], addr[1], os.getpid())
+            if hasattr(service.handler, '_initial'):
+                service.handler._initial()
+            #self.server.serve_forever()
+
+        def _start_process(index):
+            server_name = 'proc-%02d' % index
+            p = multiprocessing.Process(target=server_start, name=server_name)
+            p.start()
+            return p
+        
+        def signal_child_handler(signum, frame):
+            time.sleep(1)
+            if self.running:
+                log.warn("master recv worker exit, fork one")
+                try:
+                    pinfo = os.waitpid(-1, 0)
+                    pid = pinfo[0]
+
+                    index = -1
+                    for i in range(0, len(self.workers)):
+                        p = self.workers[i]
+                        if p.pid == pid:
+                            index = i
+                            break
+                   
+                    if index >= 0:
+                        self.workers[index] = _start_process(index)
+                except OSError:
+                    log.info('waitpid error:')
+
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(addr)
+        self.sock.listen(1024)
+
+        server_init()
+
+        self.tp = ThreadPool(max_conn, max_conn*5) 
+        self.tp.start()
+
+
+    def forever(self):
+        class MyTask (Task):
+            def run(self):
+                return self._func(*self._args, **self._kwargs)
+
+        while self.running:
             try:
-                client, addr = sock.accept()
-                t.add(Task(run, client=client, addr=addr))
-                print t.queue.qsize()
+                client, addr = self.sock.accept()
+                self.tp.add(MyTask(handle, client=client, addr=addr, framed=self.framed))
             except KeyboardInterrupt:
-                os.kill(os.getpid(), 9)
-            #except Queue.Full:
-            #    client.close()
-            except:
-                client.close()
-                log.debug(traceback.format_exc())
+                break
+                #os.kill(os.getpid(), 9)
+            except Exception, e:
+                log.warn(traceback.format_exc())
+                log.warn('master exception: %s', str(e))
 
-    def _start_process(index):
-        server_name = 'process%02d' % index
-        process = multiprocessing.Process(target=thread_run, name=server_name)
-        process.start()
+        self.sock.close()
+        self.sock = None
+        self.tp.stop_wait()
 
-        return process
+        log.warn('master exit')
 
-    # 创建工作进程
-    processes = [
-        _start_process(index)
-        for index in range(0, max_proc)
-    ]
+    def stop(self):
+        self.running = False
 
-    # 等待所有的子进程结束
-    map(
-        lambda p: p.join(),
-        processes
-    )
 
+
+'''废弃中，不推荐再使用。请用ThriftServer'''
 class RunGeventServer:
     def __init__(self, module, handler_class, addr, max_conn=1000, max_process=1):
         self.my_process = []
@@ -376,49 +463,19 @@ class RunGeventServer:
         for p in self.my_process:
             p.terminate()
 
-def trans_logger(logger):
-    """
-    替换传入的logger中的所有file_handler的stream。
-    替换方法为： 将stream使用的文件如filename, 更改为 filename.进程名
-    目的： 避免多个进程写同一个文件导致错误，已知错误有：切日志异常、日志会丢失、日志会混乱等
-    :param logging.Logger logger:
-    :return:
-    """
-
-    if not isinstance(logger, logging.Logger):
-        return
-
-    for handler in logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            handler.baseFilename = handler.baseFilename + '.' + multiprocessing.current_process().name
-
-            old_stream = handler.stream
-            if old_stream:
-                try:
-                    old_stream.flush()
-                finally:
-                    if hasattr(old_stream, "close"):
-                        old_stream.close()
-
-                handler.stream = handler._open()
-
-def do_trans_all_logger():
-    """
-    转换所有的logger，包括root-logger 和 其它logger
-    :return:
-    """
-
-    r = logging.Logger.root
-    m = logging.Logger.manager
-
-    # 根logger
-    trans_logger(r)
-    # 其它logger
-    for logger in m.loggerDict.items():
-        trans_logger(logger)
-
 def test():
-    pass
+    from zbase.base import logger
+    logger.install('stdout')
+
+    from zbase.thriftclient.payprocessor import PayProcessor 
+
+    class MyHandler:
+        def ping(self):
+            print 'pong', time.time()
+
+    t = ThriftThreadServer(PayProcessor, MyHandler, ('0.0.0.0', 9001), framed=False)
+    t.forever()
+
 
 if __name__ == '__main__':
     test()

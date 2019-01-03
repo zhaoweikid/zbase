@@ -35,7 +35,7 @@ class ThreadPool:
         for i in range(0, self.count):
             t = threading.Thread(target=self._run)
             self.threads.append(t)
-            t.setDaemon(True)
+            #t.setDaemon(True)
 
         self.isrunning = True
         for th in self.threads:
@@ -57,24 +57,33 @@ class ThreadPool:
         #        break
         #    time.sleep(1)
 
+    def stop_wait(self):
+        self.isrunning = False
+        log.info('wait stop threadpool ...')
+        while self.queue.qsize() > 0:
+            time.sleep(1)
+
+        for t in self.threads:
+            t.join()
+        log.info('threadpool stopped')
+
     def _run(self):
         while True:
-            task = None
-            while True:
+            try:
+                task = self.queue.get(timeout=1)
+                #task = self.queue.get()
+                if not task:
+                    log.error('get task none')
+                    return
+                self.do_task(task)
+            except Queue.Empty:
                 if not self.isrunning:
                     log.info('stop!')
                     return
-                try:
-                    task = self.queue.get(timeout=1)
-                    #task = self.queue.get()
-                    if not task:
-                        log.error('get task none')
-                        return
-                except Exception, e:
-                    #log.info('get timeout, self.queue.get:',  str(e))
-                    continue
-                break
-            self.do_task(task)
+            except Exception, e:
+                #log.info('get timeout, self.queue.get:',  str(e))
+                continue
+
 
 
     def do_task(self, task):
@@ -216,17 +225,18 @@ def test2():
 
     def run(obj, name):
         log.info('in task run, %s', name)
-        time.sleep(1)
+        time.sleep(2)
         log.info('ok, end task run %s', name)
         return name + '!!!'
 
     log.info('add ...')
-    t = TaskWait(func=run, name='haha')
-    tp.add(t)
+    for i in range(0, 10):
+        t = TaskWait(func=run, name='haha')
+        tp.add(t)
 
     log.info('result:%s', t.get_result(2))
 
-    tp.stop()
+    tp.stop_wait()
 
 def test3():
     from zbase.base import logger
@@ -277,14 +287,14 @@ def test3():
     for i in xrange(0, n):
         t = Task(func=run, name='haha')
         tp.add(t)
-        #t.get_result(100)
+        t.get_result(100)
     tend = time.time()
 
     print 'thread call ## time:%.6f qps:%d avg:%d' % (tend-tstart, n/(tend-tstart), ((tend-tstart)/n)*1000000)
 
     # thread, task wait
 
-    tp.stop()
+    tp.stop_wait()
     log.info('==== end ====')
 
 
@@ -296,7 +306,8 @@ def test_profile():
 if __name__ == '__main__':
     try:
         #test_profile()
-        test2()
+        #test2()
+        test3()
     except KeyboardInterrupt:
         os.kill(os.getpid(), 9)
 
