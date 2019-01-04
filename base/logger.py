@@ -5,7 +5,6 @@ import types
 import logging
 import logging.config
 from logging import DEBUG, INFO, WARN, ERROR, FATAL, NOTSET
-from zbase import conf
 
 LEVEL_COLOR = {
     DEBUG: '\33[2;39m',
