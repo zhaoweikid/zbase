@@ -54,8 +54,8 @@ class APIHandler (Handler):
         log.info('succ: %s', s)
         self.write(s)
 
-    def fail(self, errstr=u'internal error'):
-        obj = {'ret':ERR, 'err':errstr}
+    def fail(self, retcode=ERR, errstr=u'internal error'):
+        obj = {'ret':retcode, 'err':errstr}
         s = json.dumps(obj, separators=(',', ':'))
         log.info('fail: %s', s)
         self.write(s)
