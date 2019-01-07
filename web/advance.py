@@ -13,6 +13,7 @@ ERR = -1
 
 class APIHandler (Handler):
     session_conf = None
+    noses = None
     def initial(self):
         self.set_headers({'Content-Type': 'application/json; charset=UTF-8'})
         name = self.req.path.split('/')[-1]
@@ -28,21 +29,27 @@ class APIHandler (Handler):
                 self.resp = Response('Access Deny', 403)
                 raise HandlerFinish
         else:
+            if self.noses and self.req.path in self.noses:
+                return
             # check session
             sid = self.get_cookie('sid')
             if not sid:
-                self.resp = Response('Session Error', 403)
+                self.resp = Response('Session Error 1', 403)
                 raise HandlerFinish
 
             self.ses = SessionRedis(server=self.session_conf, sid=sid)
-            if self.ses.get('uid'):
-                self.resp = Response('Session Error', 403)
+            if not self.ses.get('uid'):
+                self.resp = Response('Session Error 2', 403)
                 raise HandlerFinish
-        
+    
+    def create_session(self):
+        self.ses = SessionRedis(server=self.session_conf)
+ 
 
     def finish(self):
         if self.ses and self.ses.sid:
             self.ses.save()
+            log.debug('set cookie: sid=%s', self.ses.sid)
             self.set_cookie('sid', self.ses.sid)
 
 

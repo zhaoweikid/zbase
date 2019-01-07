@@ -53,6 +53,7 @@ try:
             if not self.data:
                 return
             v = json.dumps(self.data, separators=(',', ':'))
+            log.debug('redis set:%s %s', self.sid, v)
             self.conn.set(self.sid, v, self.session_expire)
 
         def remove(self):
